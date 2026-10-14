@@ -1,0 +1,378 @@
+# Socratic hints for level 3 (static hints). keywords drive topic detection.
+_generic:
+  hints:
+  - What do you already know about this topic? Write the definition in your own words first.
+  - Try the smallest possible example by hand. What happens step by step?
+  - Which part of the problem is the hardest? Can you solve an easier version of just that part?
+DSA101:
+  arrays:
+    title: Arrays
+    keywords:
+    - array
+    - index
+    - contiguous
+    hints:
+    - What does the index of an element tell the computer about where it lives in memory?
+    - If you insert at the front, how many existing elements have to move? What does that say about the cost?
+    - Try your idea on a 4-element array by hand. Where does the last element end up?
+  linked_lists:
+    title: Linked lists
+    keywords:
+    - linked list
+    - node
+    - next pointer
+    - singly
+    - doubly
+    hints:
+    - Before you change a pointer, what would you lose if you did it first?
+    - Draw three boxes and arrows. Which arrow changes first when you insert in the middle?
+    - What should your code do when the list is empty or has only one node?
+  stacks_queues:
+    title: Stacks and queues
+    keywords:
+    - stack
+    - queue
+    - lifo
+    - fifo
+    - push
+    - pop
+    - enqueue
+    hints:
+    - 'Which element must come out next: the newest or the oldest? That tells you which structure fits.'
+    - Trace the bracket string '([)]' with a stack. At which character does it go wrong?
+    - If you reverse a stack by popping into another stack, what order do you get?
+  hashing:
+    title: Hash tables
+    keywords:
+    - hash
+    - hashmap
+    - collision
+    - dictionary
+    - load factor
+    hints:
+    - What happens when two different keys produce the same bucket number?
+    - If you remember every number you have seen so far, what question can you ask about the current number?
+    - How does the load factor affect the length of each chain?
+  recursion:
+    title: Recursion
+    keywords:
+    - recursion
+    - recursive
+    - base case
+    - call stack
+    hints:
+    - What is the smallest input where you already know the answer without any work?
+    - If someone hands you the answer for n - 1, how do you build the answer for n?
+    - Draw the call tree for a small input. Do any calls repeat?
+  sorting:
+    title: Sorting
+    keywords:
+    - sort
+    - merge sort
+    - quick sort
+    - bubble
+    - insertion sort
+    - stable
+    hints:
+    - What happens to quicksort if the pivot is always the smallest element?
+    - When you merge two sorted halves, which two elements do you compare at each step?
+    - Does your algorithm need to keep equal elements in their original order? Why might that matter?
+  binary_search:
+    title: Binary search
+    keywords:
+    - binary search
+    - sorted array
+    - mid
+    - log n
+    hints:
+    - After comparing with the middle element, which half can you be sure does not contain the target?
+    - What are lo and hi after each step on a 2-element array? Does the loop always shrink?
+    - Why must the array be sorted for this to work?
+  bst:
+    title: Binary search trees
+    keywords:
+    - bst
+    - binary search tree
+    - inorder
+    - tree height
+    hints:
+    - What happens to the tree's height if you insert sorted keys?
+    - Is it enough to compare a node with its two children? Think of a grandchild that breaks the rule.
+    - Which traversal order visits the keys of a BST in sorted order?
+  heaps:
+    title: Heaps and priority queues
+    keywords:
+    - heap
+    - priority queue
+    - heapify
+    - min heap
+    - max heap
+    hints:
+    - Where in the array are the children of index i?
+    - After removing the root, which element moves into its place, and which way does it sift?
+    - To keep the k largest items, should you throw away the smallest or the largest you are holding?
+  graphs:
+    title: 'Graphs: BFS and DFS'
+    keywords:
+    - graph
+    - bfs
+    - dfs
+    - breadth first
+    - depth first
+    - adjacency
+    hints:
+    - Which data structure gives you the nodes closest to the start first?
+    - What stops your search from going around a cycle forever?
+    - If one search from a node cannot reach everything, what does the leftover part tell you?
+DBMS201:
+  er_model:
+    title: Entity-relationship model
+    keywords:
+    - er diagram
+    - entity
+    - relationship
+    - cardinality
+    - attribute
+    hints:
+    - Does the attribute describe one entity alone, or the pairing of two entities?
+    - Can one student take many courses, and can one course have many students? What does that make the cardinality?
+    - Which entity cannot exist without another one?
+  relational_model:
+    title: Relational model and keys
+    keywords:
+    - relation
+    - primary key
+    - foreign key
+    - candidate key
+    - tuple
+    hints:
+    - Which attributes, if you know them, pin down exactly one row?
+    - If you remove one attribute from your key, is it still unique? Then it was not minimal.
+    - What should happen to Enrols rows when a student is deleted?
+  sql_basics:
+    title: SQL basics
+    keywords:
+    - sql
+    - select
+    - where
+    - group by
+    - having
+    - query
+    hints:
+    - Is your condition about single rows or about whole groups?
+    - Which clause runs first, WHERE or GROUP BY? What does that mean for aggregates?
+    - What does any comparison with NULL return?
+  joins:
+    title: Joins
+    keywords:
+    - join
+    - inner join
+    - left join
+    - outer join
+    - cartesian
+    hints:
+    - Do you need rows that have no match in the other table?
+    - What does the result look like if you leave out the ON condition?
+    - After a LEFT JOIN, what value marks a row with no match?
+  normalization:
+    title: Normalization
+    keywords:
+    - normalization
+    - normal form
+    - 1nf
+    - 2nf
+    - 3nf
+    - bcnf
+    - functional dependency
+    hints:
+    - Which attribute depends on only part of the key?
+    - If you change a student's name, how many rows must you update? That is the anomaly.
+    - After splitting, which common attribute lets you join the tables back?
+  indexing:
+    title: Indexing and B+ trees
+    keywords:
+    - index
+    - b+ tree
+    - b tree
+    - clustered
+    - secondary index
+    hints:
+    - How many disk pages does a lookup touch in a tree of height 3?
+    - Why are B+ tree leaves linked to each other? Think of range queries.
+    - What extra work does every INSERT do when a table has many indexes?
+  transactions:
+    title: Transactions and ACID
+    keywords:
+    - transaction
+    - acid
+    - atomicity
+    - durability
+    - commit
+    - rollback
+    hints:
+    - If the system crashes halfway through, what should the database look like afterwards?
+    - Which property is about two transactions running at the same time?
+    - Why must the log reach the disk before the data page does?
+  concurrency_control:
+    title: Concurrency control
+    keywords:
+    - concurrency
+    - locking
+    - 2pl
+    - two phase locking
+    - serializable
+    - deadlock
+    hints:
+    - Which pairs of operations conflict? Think of the same item with at least one write.
+    - Draw the precedence graph. What does a cycle mean?
+    - In 2PL, once a transaction releases a lock, what is it no longer allowed to do?
+  query_processing:
+    title: Query processing and optimization
+    keywords:
+    - query plan
+    - optimizer
+    - explain
+    - nested loop
+    - hash join
+    - selectivity
+    hints:
+    - Which operation is cheapest to run early to shrink the data?
+    - How would the database know how many rows a filter keeps?
+    - When is a nested loop join actually a good choice?
+  recovery:
+    title: Recovery
+    keywords:
+    - recovery
+    - checkpoint
+    - undo
+    - redo
+    - aries
+    - log
+    hints:
+    - Which transactions had committed before the crash?
+    - Why does a checkpoint mean you do not need to read the whole log?
+    - Is it safe to apply a redo record twice? What makes it safe?
+OS202:
+  processes:
+    title: Processes
+    keywords:
+    - process
+    - pcb
+    - fork
+    - context switch
+    - process state
+    hints:
+    - What information must the OS save to pause a process and resume it later?
+    - After fork, how does each process know whether it is the parent or the child?
+    - Draw the process tree after each fork call.
+  threads:
+    title: Threads
+    keywords:
+    - thread
+    - multithreading
+    - user thread
+    - kernel thread
+    - pthread
+    hints:
+    - Which parts of a process do threads share, and which does each keep for itself?
+    - If one user-level thread blocks on I/O in a many-to-one model, what happens to the others?
+    - Why is switching between threads cheaper than switching between processes?
+  cpu_scheduling:
+    title: CPU scheduling
+    keywords:
+    - scheduling
+    - fcfs
+    - sjf
+    - round robin
+    - waiting time
+    - turnaround
+    hints:
+    - Draw the Gantt chart first. When does each process finish?
+    - What happens to short jobs stuck behind a long one in FCFS?
+    - How does the size of the quantum change round robin's behaviour?
+  synchronization:
+    title: Process synchronization
+    keywords:
+    - race condition
+    - mutex
+    - semaphore
+    - critical section
+    - monitor
+    hints:
+    - Which single line of code is really three machine steps?
+    - What should a producer do when the buffer is full?
+    - What does a semaphore's starting value represent?
+  deadlocks:
+    title: Deadlocks
+    keywords:
+    - deadlock
+    - banker
+    - circular wait
+    - resource allocation graph
+    hints:
+    - Which of the four conditions is easiest to break in your example?
+    - If every thread takes locks in the same global order, can a cycle form?
+    - In the Banker's algorithm, which process can finish with what is available right now?
+  memory_management:
+    title: Memory management
+    keywords:
+    - contiguous allocation
+    - fragmentation
+    - first fit
+    - best fit
+    - memory allocation
+    hints:
+    - Is the wasted space inside an allocated block or between blocks?
+    - Try each fit strategy on the hole list by hand. Which hole does each choose?
+    - What would make every free piece of memory usable by any process?
+  paging:
+    title: Paging
+    keywords:
+    - paging
+    - page table
+    - frame
+    - tlb
+    - page number
+    - offset
+    hints:
+    - How many bits does the offset need for the page size?
+    - 'Split the address: which part selects the page and which part the byte inside it?'
+    - What does the TLB save on every memory access?
+  virtual_memory:
+    title: Virtual memory and page replacement
+    keywords:
+    - virtual memory
+    - page fault
+    - lru
+    - fifo replacement
+    - thrashing
+    - demand paging
+    hints:
+    - When a page must leave, which one has gone unused the longest?
+    - Track the frames in a table, one column per reference. Where are the hits?
+    - What happens to the CPU when processes spend all their time paging?
+  file_systems:
+    title: File systems
+    keywords:
+    - file system
+    - inode
+    - directory
+    - fat
+    - allocation method
+    hints:
+    - Where is a file's name stored, and where is its size?
+    - How many pointers fit in one block?
+    - Which allocation method makes random access fast?
+  io_disk_scheduling:
+    title: Disk scheduling
+    keywords:
+    - disk scheduling
+    - sstf
+    - scan
+    - c-scan
+    - seek time
+    - elevator
+    hints:
+    - Which request is closest to the head right now?
+    - Which direction is the head moving, and does it reverse at the last request or at the disk edge?
+    - Which policy could leave a far-away request waiting forever?

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Tutor</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 16px; }
+  #banner { padding: .6rem 1rem; border-radius: 6px; background: #e6f4ea; }
+  textarea, select, button { font: inherit; width: 100%; margin-top: .5rem; }
+  #answer { white-space: pre-wrap; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<!-- Phase 1 placeholder. Phase 3 replaces it with the full student page (chat, quiz, banner). -->
+<h1>Campus Tutor</h1>
+<div id="banner">Checking status…</div>
+<select id="course"><option>DSA101</option><option>DBMS201</option><option>OS202</option></select>
+<textarea id="q" rows="3" placeholder="Ask the tutor a question"></textarea>
+<button id="ask">Ask</button>
+<div id="answer"></div>
+<script>
+const sid = crypto.randomUUID();
+async function ask() {
+  const out = document.getElementById("answer");
+  out.textContent = "Thinking…";
+  const r = await fetch("/api/tutor/ask", {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({student_id: "s0001", session_id: sid,
+      course: document.getElementById("course").value, question: document.getElementById("q").value})});
+  const d = await r.json();
+  out.textContent = r.ok ? `${d.answer}\n\n[level ${d.level} · ${d.source} · ${d.latency_ms} ms]` : `Error: ${d.detail}`;
+}
+async function status() {
+  try { const d = await (await fetch("/api/status")).json();
+        document.getElementById("banner").textContent = d.banner; } catch (e) {}
+}
+document.getElementById("ask").onclick = ask;
+status(); setInterval(status, 3000);
+</script>
+</body>
+</html>

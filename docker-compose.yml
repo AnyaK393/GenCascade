@@ -4,4 +4,4 @@
 #   Fedora: profile "control"   -> control/compose.yml (plus "mock" for local dev)
 include:
   - control/compose.yml
-  # - platform/compose.yml   # Mac: uncomment once platform/compose.yml exists
+  - platform/compose.yml
