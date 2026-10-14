@@ -1,0 +1,40 @@
+# Fedora-owned compose file, included from the root docker-compose.yml.
+# Host networking: on Linux this lets containers reach PLATFORM_HOST (localhost for the
+# mock, the Mac's IP otherwise) without port mapping. `:Z` relabels mounts for SELinux.
+services:
+  prometheus:
+    profiles: ["control"]
+    image: docker.io/prom/prometheus:v3.5.0
+    network_mode: host
+    mem_limit: 512m
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.listen-address=:9090
+      - --web.enable-lifecycle
+    volumes:
+      # CS_CONTROL_DIR (exported by control.mk) makes this absolute: podman-compose resolves
+      # relative paths in included files against the root, Docker Compose against this file.
+      - ${CS_CONTROL_DIR:-.}/prometheus:/etc/prometheus:ro,Z
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+
+  # Local stand-in for the Mac's Redis, used only with the mock platform.
+  redis-mock:
+    profiles: ["mock"]
+    image: docker.io/library/redis:7.4-alpine
+    network_mode: host
+    command:
+      - redis-server
+      - --port
+      - "6379"
+      - --requirepass
+      - ${REDIS_PASSWORD:-dev-redis}
+      - --maxmemory
+      - 64mb
+      - --maxmemory-policy
+      - volatile-lru
+
+volumes:
+  prometheus-data:

@@ -1,0 +1,7 @@
+# Shared entry point. Each side owns its own compose file; this file only
+# includes them, so edits here stay one line and rarely conflict.
+#   Mac:    profile "platform"  -> platform/compose.yml
+#   Fedora: profile "control"   -> control/compose.yml (plus "mock" for local dev)
+include:
+  - control/compose.yml
+  # - platform/compose.yml   # Mac: uncomment once platform/compose.yml exists

@@ -1,0 +1,6 @@
+.run/
+results/
+data/episodes/
+data/*.parquet
+prometheus/targets/*.json
+!prometheus/targets/.gitkeep

@@ -1,0 +1,11 @@
+# Main demo scenario: 0 -> peak over ramp_s, hold, then taper.
+shape: exam_ramp
+seed: 42
+peak_users: 120
+ramp_s: 240
+hold_s: 300
+taper_s: 60
+tutor_weight: 7
+quiz_weight: 3
+question_length: short   # short | long
+course: DSA101

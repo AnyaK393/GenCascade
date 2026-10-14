@@ -1,0 +1,10 @@
+# Shared ignores only; each side keeps its own in control/.gitignore or platform/.gitignore
+.env
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+.idea/
+.vscode/
