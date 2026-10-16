@@ -1,0 +1,185 @@
+# Likely student questions, 5 per topic (guide 5.7). tools/seed_cache.py answers each at level 0
+# and writes data/cache_seed.yaml; Phase 3 pre-warm uses the same questions.
+DSA101:
+  arrays:
+  - Why is accessing an array element by index O(1)?
+  - Why is inserting at the beginning of an array slow?
+  - What is the difference between an array and a dynamic array?
+  - How do I reverse an array in place?
+  - Why does my loop give an index out of range error on the last element?
+  linked_lists:
+  - When should I use a linked list instead of an array?
+  - How do I reverse a singly linked list?
+  - How do I detect a cycle in a linked list?
+  - Why do I lose the rest of the list when I insert a node?
+  - What is the difference between a singly and a doubly linked list?
+  stacks_queues:
+  - What is the difference between a stack and a queue?
+  - How can I check balanced parentheses with a stack?
+  - How do I implement a queue using two stacks?
+  - What is a circular queue and why is it useful?
+  - What happens on stack overflow and underflow?
+  hashing:
+  - How does a hash table get O(1) average lookup?
+  - What is a hash collision and how is it handled?
+  - What is the difference between chaining and open addressing?
+  - What is the load factor and why does it matter?
+  - When does a hash table lookup become O(n)?
+  recursion:
+  - What is a base case and why do I need one?
+  - Why does my recursive function cause a stack overflow?
+  - How do I trace a recursive call on paper?
+  - What is the difference between recursion and iteration?
+  - How does memoization make recursion faster?
+  sorting:
+  - Why is merge sort O(n log n)?
+  - What is the worst case of quicksort and when does it happen?
+  - What does it mean for a sorting algorithm to be stable?
+  - When is insertion sort faster than merge sort?
+  - How does choosing a pivot affect quicksort?
+  binary_search:
+  - Why does binary search need a sorted array?
+  - Why is binary search O(log n)?
+  - How do I avoid an infinite loop in binary search?
+  - How do I find the first occurrence of a value with binary search?
+  - Why should I write mid as low plus half the range?
+  bst:
+  - What property must every node in a binary search tree satisfy?
+  - How do I delete a node with two children from a BST?
+  - Why does inserting sorted keys make a BST slow?
+  - What does inorder traversal of a BST give?
+  - How is a balanced BST different from a normal BST?
+  heaps:
+  - What is the difference between a heap and a binary search tree?
+  - How does heapify work after removing the root?
+  - Why is building a heap O(n) and not O(n log n)?
+  - How is a heap stored in an array?
+  - How is a priority queue related to a heap?
+  graphs:
+  - What is the difference between BFS and DFS?
+  - When should I use BFS instead of DFS?
+  - Why do I need a visited set in graph traversal?
+  - What is the difference between an adjacency list and an adjacency matrix?
+  - How does BFS find the shortest path in an unweighted graph?
+DBMS201:
+  er_model:
+  - What is the difference between an entity and an attribute?
+  - What is a weak entity?
+  - How do I show a many-to-many relationship in an ER diagram?
+  - What is the difference between total and partial participation?
+  - How do I convert an ER diagram into tables?
+  relational_model:
+  - What is the difference between a primary key and a candidate key?
+  - What is a foreign key and why is it needed?
+  - What is a super key?
+  - Can a primary key be null?
+  - What is referential integrity?
+  sql_basics:
+  - What is the difference between WHERE and HAVING?
+  - How does GROUP BY work?
+  - What is the difference between DELETE, TRUNCATE and DROP?
+  - Why does comparing with NULL using equals not work?
+  - In which order does SQL evaluate the clauses of a SELECT?
+  joins:
+  - What is the difference between an inner join and a left join?
+  - Why does my join return duplicate rows?
+  - What is a self join and when is it used?
+  - What is a natural join?
+  - When does a full outer join produce NULLs?
+  normalization:
+  - What is a functional dependency?
+  - What is the difference between 2NF and 3NF?
+  - What is BCNF and how is it stricter than 3NF?
+  - Why do we normalize a database?
+  - What is a partial dependency?
+  indexing:
+  - How does an index make queries faster?
+  - Why are B+ trees used for database indexes?
+  - What is the difference between a clustered and a non-clustered index?
+  - Why can too many indexes slow down inserts?
+  - When does the database not use an index?
+  transactions:
+  - What does ACID stand for?
+  - What is the difference between commit and rollback?
+  - What does atomicity mean for a bank transfer?
+  - What is durability and how is it guaranteed?
+  - What happens to a transaction if the system crashes?
+  concurrency_control:
+  - What is a dirty read?
+  - How does two-phase locking work?
+  - What is the difference between shared and exclusive locks?
+  - What is a deadlock between transactions?
+  - What is conflict serializability?
+  query_processing:
+  - What does the query optimizer do?
+  - Why is pushing selections down a query tree useful?
+  - What is the difference between a nested loop join and a hash join?
+  - How does the optimizer estimate the cost of a query?
+  - What is a query execution plan?
+  recovery:
+  - What is a write-ahead log?
+  - What is the difference between undo and redo?
+  - What is a checkpoint and why is it used?
+  - What does the ARIES algorithm do?
+  - What is the difference between deferred and immediate update?
+OS202:
+  processes:
+  - What is the difference between a program and a process?
+  - What are the states of a process?
+  - What is a process control block?
+  - What does fork return in the parent and the child?
+  - What is a context switch?
+  threads:
+  - What is the difference between a process and a thread?
+  - Why are threads cheaper than processes?
+  - What do threads of the same process share?
+  - What is the difference between user threads and kernel threads?
+  - What problems can happen when threads share data?
+  cpu_scheduling:
+  - What is the difference between preemptive and non-preemptive scheduling?
+  - How does round robin scheduling work?
+  - Why can shortest job first cause starvation?
+  - How do I calculate average waiting time?
+  - How does the time quantum affect round robin?
+  synchronization:
+  - What is a race condition?
+  - What is the critical section problem?
+  - What is the difference between a mutex and a semaphore?
+  - How does the producer consumer problem work with semaphores?
+  - What is busy waiting?
+  deadlocks:
+  - What are the four conditions for deadlock?
+  - How does the banker's algorithm avoid deadlock?
+  - What is the difference between deadlock prevention and avoidance?
+  - How do I draw a resource allocation graph?
+  - How can a system recover from a deadlock?
+  memory_management:
+  - What is the difference between internal and external fragmentation?
+  - What is the difference between logical and physical addresses?
+  - How do first fit, best fit and worst fit differ?
+  - What is compaction?
+  - What does the memory management unit do?
+  paging:
+  - How is a logical address split into page number and offset?
+  - What is a page table?
+  - What is a TLB and why does it speed up paging?
+  - How does paging remove external fragmentation?
+  - How do I calculate the effective memory access time?
+  virtual_memory:
+  - What is a page fault?
+  - How does the LRU page replacement algorithm work?
+  - What is Belady's anomaly?
+  - What is thrashing?
+  - Why is the optimal page replacement algorithm not used in practice?
+  file_systems:
+  - What is an inode?
+  - What is the difference between contiguous, linked and indexed allocation?
+  - What is the difference between a hard link and a soft link?
+  - How does a directory structure organize files?
+  - How is free space managed on a disk?
+  io_disk_scheduling:
+  - How does the SCAN disk scheduling algorithm work?
+  - What is the difference between SSTF and FCFS?
+  - Why can SSTF cause starvation?
+  - What is the difference between SCAN and C-SCAN?
+  - How do I calculate total head movement?

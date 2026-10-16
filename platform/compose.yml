@@ -7,6 +7,7 @@ x-svc: &svc
   mem_limit: 160m
   restart: unless-stopped
   extra_hosts: ["host.docker.internal:host-gateway"]
+  volumes: ["${CS_PLATFORM_DIR:-.}/data:/app/data:ro"]  # vet cache_seed.yaml without a rebuild
   healthcheck:
     test: ["CMD", "python", "-c", "import os,urllib.request; urllib.request.urlopen(f'http://localhost:{os.environ[\"PORT\"]}/health', timeout=2)"]
     interval: 5s
@@ -65,7 +66,7 @@ services:
   student:
     <<: *svc
     ports: ["8001:8001"]
-    volumes: ["student-data:/data"]
+    volumes: ["student-data:/data", "${CS_PLATFORM_DIR:-.}/data:/app/data:ro"]
     environment: {<<: *env, SERVICE_NAME: student, SERVICE_MODULE: student, PORT: "8001"}
 
   orchestrator:

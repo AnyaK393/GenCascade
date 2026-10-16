@@ -6,13 +6,14 @@ import time
 from collections import deque
 
 import httpx
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from prometheus_client import Counter, Gauge, Histogram
 from pydantic import BaseModel
 
-from cs_common import create_app, settings
+from cs_common import chaos, create_app, settings
 from cs_common.logging import make_client
 from cs_common.metrics import BUCKETS, metric
+from cs_common.redis_client import require_token
 from mock_llm import sim
 
 QDEPTH = metric(Gauge, "cs_llm_queue_depth", "Requests waiting for a generation slot")
@@ -30,6 +31,7 @@ MODEL(MODEL_NAME).set(1)
 MAX_QUEUE = 1000 if settings.protection_mode == "none" else settings.max_queue
 
 app = create_app()
+chaos.install(app)
 slots = asyncio.Semaphore(settings.max_inflight)
 state = {"waiting": 0}
 recent: deque[tuple[float, int, float]] = deque()  # (finished_at, eval_count, eval_seconds)
@@ -57,6 +59,7 @@ def record(out: dict) -> None:
 
 
 async def call_backend(b: GenerateBody) -> dict:
+    await chaos.inject()  # inside the slot: injected latency is a slower GPU
     if MOCK:
         return await sim.generate(f"{b.system or ''} {b.prompt}", b.max_tokens, settings.mock_tokens_per_s)
     body = {"model": b.model or settings.llm_model, "prompt": b.prompt, "stream": False,
@@ -98,3 +101,11 @@ async def generate(b: GenerateBody):
     return {"text": out.get("response", "").strip(), "model": MODEL_NAME,
             "eval_count": out.get("eval_count", 0), "prompt_eval_count": out.get("prompt_eval_count", 0),
             "latency_s": round(time.monotonic() - start, 3)}
+
+
+@app.post("/admin/reset", dependencies=[Depends(require_token)])
+async def admin_reset():
+    chaos.clear()
+    recent.clear()
+    TPS.set(0)
+    return {"ok": True}

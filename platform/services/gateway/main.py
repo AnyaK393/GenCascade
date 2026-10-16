@@ -78,8 +78,22 @@ async def ask(b: AskBody):
     if r.status_code >= 400:
         raise HTTPException(r.status_code, r.json().get("detail", r.text) if r.content else "")
     d = r.json()
-    return {"answer": d["answer"], "level": d["level"], "source": d["source"],
-            "latency_ms": round((time.perf_counter() - t0) * 1000), "session_id": b.session_id}
+    out = {"answer": d["answer"], "level": d["level"], "source": d["source"],
+           "latency_ms": round((time.perf_counter() - t0) * 1000), "session_id": b.session_id}
+    if "queue_id" in d:  # level 4: the page polls /api/tutor/queued/<id> for the real answer
+        out.update(queue_id=d["queue_id"], position=d["position"])
+    return out
+
+
+@app.get("/api/tutor/queued/{qid}")
+async def queued(qid: str):
+    try:
+        r = await tutor_http.get(f"{settings.orchestrator_url}/tutor/queued/{qid}", timeout=2)
+    except httpx.HTTPError:
+        raise HTTPException(504, "tutor unavailable")
+    if r.status_code >= 400:
+        raise HTTPException(r.status_code, r.json().get("detail", "") if r.content else "")
+    return r.json()
 
 
 class SubmitBody(BaseModel):

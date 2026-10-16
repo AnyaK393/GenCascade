@@ -8,12 +8,13 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
 import numpy as np
+import yaml
 from fastapi import Depends
 from prometheus_client import Counter, Histogram
 from pydantic import BaseModel
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from cs_common import create_app, settings
+from cs_common import chaos, create_app, settings
 from cs_common.metrics import BUCKETS, metric
 from cs_common.redis_client import rds, require_token
 
@@ -25,6 +26,7 @@ CHUNK_CHARS = 400
 CACHE_TTL_S = 6 * 3600
 CACHE_MIN_SIM = 0.75
 SOLUTION_TAG = "<!-- type: solution -->"
+SEED_FILE = settings.data_dir / "cache_seed.yaml"  # written by tools/seed_cache.py, vetted by hand
 
 
 @dataclass
@@ -90,10 +92,12 @@ async def lifespan(_app):
                  courses=np.array([c.course for c in chunks]),
                  solution=np.array([c.solution for c in chunks]))
     await reload_cache_vectors()
+    await load_seed()
     yield
 
 
 app = create_app(ready=lambda: "matrix" in index, lifespan=lifespan)
+chaos.install(app)
 
 
 class SearchBody(BaseModel):
@@ -105,6 +109,7 @@ class SearchBody(BaseModel):
 
 @app.post("/search")
 async def search(b: SearchBody):
+    await chaos.inject()
     t0 = time.perf_counter()
     scores = (index["matrix"] @ index["vectorizer"].transform([b.query]).T).toarray().ravel()
     if b.course:
@@ -134,6 +139,7 @@ class CacheGetBody(BaseModel):
 
 @app.post("/cache/get")
 async def cache_get(b: CacheGetBody):
+    await chaos.inject()
     t0 = time.perf_counter()
     q = vec(f"{b.question} {b.course}")
     best_key, best_sim = None, 0.0
@@ -169,14 +175,40 @@ class CachePutBody(BaseModel):
     vetted: bool = False
 
 
-@app.post("/cache/put")
-async def cache_put(b: CachePutBody):
+async def put(b: CachePutBody) -> str:
     key = cache_key(b.course, b.question)
     await rds.hset(key, mapping={"question": b.question, "course": b.course, "answer": b.answer,
                                  "topic": b.topic, "vetted": "1" if b.vetted else "0"})
     await rds.expire(key, CACHE_TTL_S)
     cache_vecs[key] = (b.course, vec(f"{b.question} {b.course}"))
-    return {"ok": True, "key": key}
+    return key
+
+
+@app.post("/cache/put")
+async def cache_put(b: CachePutBody):
+    return {"ok": True, "key": await put(b)}
+
+
+async def load_seed() -> int:
+    """Seeded FAQ answers are the cache's clean state: loaded at startup and on every reset."""
+    if not SEED_FILE.is_file():
+        return 0
+    n = 0
+    try:
+        for course, entries in (yaml.safe_load(SEED_FILE.read_text()) or {}).items():
+            for e in entries or []:
+                if e.get("answer"):
+                    await put(CachePutBody(course=course, question=e["question"], answer=e["answer"],
+                                           topic=e.get("topic", ""), vetted=bool(e.get("vetted"))))
+                    n += 1
+    except Exception:
+        pass  # Redis down or a bad edit to the file: start without the seed
+    return n
+
+
+@app.post("/cache/reload", dependencies=[Depends(require_token)])
+async def cache_reload():
+    return {"ok": True, "loaded": await load_seed()}
 
 
 @app.post("/admin/reset", dependencies=[Depends(require_token)])
@@ -185,4 +217,5 @@ async def admin_reset():
     if keys:
         await rds.delete(*keys)
     cache_vecs.clear()
-    return {"ok": True, "cleared": len(keys)}
+    chaos.clear()
+    return {"ok": True, "cleared": len(keys), "seeded": await load_seed()}

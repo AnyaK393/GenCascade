@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     quiz_timeout_s: float = 2.0
     rate_limit_per_min: int = 6
     heartbeat_stale_s: float = 10.0
+    shed_max_per_course: int = 500  # level 4 queue cap; beyond it the student gets a hint only
 
     data_dir: Path = PLATFORM_DIR / "data"
     db_path: Path = PLATFORM_DIR / "data" / "student.db"
