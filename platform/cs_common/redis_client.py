@@ -18,6 +18,15 @@ rds = aioredis.Redis(host=settings.redis_host, port=settings.redis_port,
 
 HEARTBEAT, LEVEL, BREAKER, EXAM, ACTIONS = (
     "cs:control:heartbeat", "cs:mode:level", "cs:breaker:llm", "cs:mode:exam", "cs:actions")
+ADMISSION = "cs:admission:limit"  # Mac-only: gateway's AIMD limit, shown in /control/state
+
+
+def active_exam(exam: dict | None) -> dict | None:
+    """The exam dict while it is on and not past ends_at (unix seconds), else None."""
+    if not exam or not exam.get("active"):
+        return None
+    ends = exam.get("ends_at_ts")
+    return exam if ends is None or time.time() < float(ends) else None
 
 
 async def control_keys() -> dict:

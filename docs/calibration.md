@@ -39,3 +39,28 @@ was not set yet. Re-run after the Phase 0 Ollama settings are applied.
 | `MOCK_TOKENS_PER_S` | 41 (aggregate) | Mac and Fedora: mock backend |
 
 Tuned values from the Phase 3 load tests go below.
+
+## Phase 3 measurements (Mac, 2026-10-16, real Ollama, `make platform-exam`)
+
+Load: 30 tutor loops with no think time (harsher than Locust's 8-20 s waits) plus quiz submits
+at 5 per second for 40 s, exam mode on DSA101 with floor 1.
+
+| Measurement | Result | Target |
+| --- | --- | --- |
+| Pre-warm, 10 DSA101 topics (100 level-0 answers, one at a time) | 270-303 s (two runs) | < 10 min before the exam |
+| Quiz submit p95 / p50 during the exam | 95-271 ms / 11-12 ms (200/200 committed, two runs) | < 500 ms |
+| AIMD admission limit | 4 -> 7, then steady | |
+| Tutor requests shed to level 4 | 302 of 343 and 320 of 364 (no think time, so most are retries of a full limiter) | |
+| Exam cache hit rate on Locust's question bank | 0% vetted only (nothing vetted yet); 53% if all were vetted | > 40% |
+| Banner, server side | 76-100 ms + the page's 3 s poll | < 3 s |
+| Solution chunks served to the exam course | 0 of 10 probes | 0 |
+
+Tuned values (first pass, to revisit in the joint load test):
+
+| Setting | Value | Where it is used |
+| --- | --- | --- |
+| `ADMISSION_START` / `ADMISSION_MAX` | 4 / 16 | gateway AIMD limit during an exam |
+| `ADMISSION_TARGET_S` | 8 s | +1 every 5 s while gateway tutor p95 is under it |
+| `ADMISSION_WAIT_S` | 3 s | then the request is shed to level 4 |
+| AIMD decrease | halve on an LLM timeout, at most once per 2 s, min 1 | |
+| `LLM_TIMEOUT_S`, `MAX_QUEUE` | unchanged (20 s, 40) | |

@@ -5,37 +5,214 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Campus Tutor</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 16px; }
-  #banner { padding: .6rem 1rem; border-radius: 6px; background: #e6f4ea; }
-  textarea, select, button { font: inherit; width: 100%; margin-top: .5rem; }
-  #answer { white-space: pre-wrap; margin-top: 1rem; }
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1d2330; --muted: #5d6677; --line: #dde1e8;
+    --accent: #2457c5; --green: #1f7a4a; --green-bg: #e3f4ea; --amber: #8a5a00; --amber-bg: #fdf1d8;
+    --blue: #1d4f9c; --blue-bg: #e2ecfb; --me: #e9eefb; --err: #b42318;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --card: #1b2029; --text: #e6e9ef; --muted: #9aa3b2; --line: #2c3340;
+      --accent: #7aa2ff; --green: #7fd6a4; --green-bg: #173326; --amber: #f2c26b; --amber-bg: #3a2d12;
+      --blue: #9cc0ff; --blue-bg: #17284a; --me: #222c40; --err: #ff8a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+           padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--card); }
+  h1 { font-size: 18px; margin: 0; }
+  label { color: var(--muted); font-size: 13px; }
+  select, input, textarea, button { font: inherit; color: inherit; }
+  select, input, textarea { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+  button { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-weight: 600; }
+  button:disabled { opacity: .55; cursor: default; }
+  #banner { padding: 10px 16px; font-weight: 600; }
+  #banner.green { background: var(--green-bg); color: var(--green); }
+  #banner.amber { background: var(--amber-bg); color: var(--amber); }
+  #banner.blue { background: var(--blue-bg); color: var(--blue); }
+  #exam { padding: 6px 16px; font-size: 13px; background: var(--card); border-bottom: 1px solid var(--line); display: none; }
+  main { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; padding: 16px; max-width: 1150px; margin: 0 auto; }
+  @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  #chat { height: 52vh; min-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+  .msg { padding: 9px 12px; border-radius: 10px; max-width: 92%; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .me { align-self: flex-end; background: var(--me); }
+  .bot { align-self: flex-start; border: 1px solid var(--line); }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .02em; padding: 1px 7px; border-radius: 99px;
+         margin-bottom: 4px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+  .tag.llm0 { color: var(--green); border-color: currentColor; }
+  .tag.llm1 { color: var(--amber); border-color: currentColor; }
+  .tag.notes, .tag.hint, .tag.queued { color: var(--blue); border-color: currentColor; }
+  .meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  form.ask { display: flex; gap: 8px; margin-top: 10px; }
+  form.ask textarea { flex: 1; resize: vertical; min-height: 42px; }
+  .q { margin: 0 0 12px; }
+  .q p { margin: 0 0 4px; font-weight: 600; }
+  .q label { display: block; color: var(--text); font-size: 14px; }
+  #quizStatus { margin-left: 10px; font-weight: 600; }
+  .ok { color: var(--green); } .err { color: var(--err); }
 </style>
 </head>
 <body>
-<!-- Phase 1 placeholder. Phase 3 replaces it with the full student page (chat, quiz, banner). -->
-<h1>Campus Tutor</h1>
-<div id="banner">Checking status…</div>
-<select id="course"><option>DSA101</option><option>DBMS201</option><option>OS202</option></select>
-<textarea id="q" rows="3" placeholder="Ask the tutor a question"></textarea>
-<button id="ask">Ask</button>
-<div id="answer"></div>
+<header>
+  <h1>Campus Tutor</h1>
+  <div>
+    <label for="course">Course</label>
+    <select id="course"><option>DSA101</option><option>DBMS201</option><option>OS202</option></select>
+    <label for="sid">Student ID</label>
+    <input id="sid" size="7">
+  </div>
+</header>
+<div id="banner" class="green">Tutor running normally</div>
+<div id="exam"></div>
+<main>
+  <section>
+    <h2>Ask the tutor</h2>
+    <div id="chat" aria-live="polite"></div>
+    <form class="ask" id="askForm">
+      <textarea id="question" placeholder="Ask about this course, e.g. Why does inserting sorted keys make a BST slow?" required></textarea>
+      <button id="askBtn">Ask</button>
+    </form>
+  </section>
+  <section>
+    <h2 id="quizTitle">Quiz</h2>
+    <form id="quiz"></form>
+    <button id="submitBtn" form="quiz">Submit</button><span id="quizStatus"></span>
+  </section>
+</main>
 <script>
-const sid = crypto.randomUUID();
-async function ask() {
-  const out = document.getElementById("answer");
-  out.textContent = "Thinking…";
-  const r = await fetch("/api/tutor/ask", {method: "POST", headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({student_id: "s0001", session_id: sid,
-      course: document.getElementById("course").value, question: document.getElementById("q").value})});
-  const d = await r.json();
-  out.textContent = r.ok ? `${d.answer}\n\n[level ${d.level} · ${d.source} · ${d.latency_ms} ms]` : `Error: ${d.detail}`;
+const QUIZZES = {
+  DSA101: [
+    ["Average lookup cost in a hash table?", ["O(1)", "O(log n)", "O(n)"]],
+    ["Inserting sorted keys into a plain BST gives a tree of height…", ["log n", "n", "1"]],
+    ["Which structure gives FIFO order?", ["Stack", "Queue", "Heap"]],
+    ["Binary search needs the array to be…", ["Sorted", "Hashed", "Linked"]],
+    ["BFS on an unweighted graph finds…", ["Shortest paths", "A topological order", "A minimum-weight spanning tree"]],
+  ],
+  DBMS201: [
+    ["A foreign key refers to…", ["A primary key of another table", "Any column", "An index"]],
+    ["Which normal form removes transitive dependencies?", ["1NF", "2NF", "3NF"]],
+    ["The A in ACID stands for…", ["Availability", "Atomicity", "Accuracy"]],
+    ["WHERE filters rows; HAVING filters…", ["Groups", "Columns", "Tables"]],
+    ["Most database indexes are built as…", ["B+ trees", "Linked lists", "Stacks"]],
+  ],
+  OS202: [
+    ["Threads of one process share…", ["Address space", "Stack", "Registers"]],
+    ["Which is NOT a deadlock condition?", ["Mutual exclusion", "Preemption", "Circular wait"]],
+    ["Round robin is mainly tuned by…", ["Time quantum", "Page size", "Disk speed"]],
+    ["A TLB speeds up…", ["Address translation", "Disk seeks", "Context switches"]],
+    ["Thrashing happens when a process…", ["Spends more time paging than executing", "Has too many threads", "Uses SSTF"]],
+  ],
+};
+const TAGS = { cache: ["From course notes", "notes"], rag: ["From course notes", "notes"], hint: ["Hint", "hint"], queued: ["Queued", "queued"] };
+const $ = (id) => document.getElementById(id);
+const store = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
+                set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + String(Math.random()).slice(2));
+const sessionId = uuid();
+$("sid").value = store.get("sid") || "s" + String(Math.floor(Math.random() * 1500)).padStart(4, "0");
+$("course").value = store.get("course") || "DSA101";
+$("sid").onchange = () => store.set("sid", $("sid").value.trim());
+
+function add(cls, text, tag, meta) {
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  if (tag) { const t = document.createElement("span"); t.className = "tag " + tag[1]; t.textContent = tag[0]; div.append(t, document.createElement("br")); }
+  div.append(text);
+  if (meta) { const m = document.createElement("div"); m.className = "meta"; m.textContent = meta; div.append(m); }
+  $("chat").append(div);
+  $("chat").scrollTop = $("chat").scrollHeight;
+  return div;
 }
-async function status() {
-  try { const d = await (await fetch("/api/status")).json();
-        document.getElementById("banner").textContent = d.banner; } catch (e) {}
+function tagFor(d) { return d.source === "llm" ? (d.level === 0 ? ["AI tutor", "llm0"] : ["Light mode", "llm1"]) : (TAGS[d.source] || [d.source, ""]); }
+
+async function pollQueued(id, bubble) {
+  for (let i = 0; i < 120; i++) {
+    await new Promise((r) => setTimeout(r, 5000));
+    try {
+      const d = await (await fetch("/api/tutor/queued/" + encodeURIComponent(id))).json();
+      if (d.status === "answered") { add("bot", d.answer, ["AI tutor (from the queue)", "llm0"]); return; }
+      if (d.position) bubble.querySelector(".meta").textContent = "Still queued: number " + d.position;
+    } catch {}
+  }
 }
-document.getElementById("ask").onclick = ask;
-status(); setInterval(status, 3000);
+
+$("askForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const q = $("question").value.trim();
+  if (!q) return;
+  add("me", q);
+  $("question").value = "";
+  $("askBtn").disabled = true;
+  try {
+    const r = await fetch("/api/tutor/ask", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student_id: $("sid").value.trim(), session_id: sessionId, course: $("course").value, question: q }) });
+    const d = await r.json();
+    if (!r.ok) { add("bot", d.detail || "The tutor could not answer. Try again in a moment.", ["Error", ""]); return; }
+    const bubble = add("bot", d.answer, tagFor(d), (d.latency_ms / 1000).toFixed(1) + " s" + (d.position ? " · queue number " + d.position : ""));
+    if (d.queue_id) pollQueued(d.queue_id, bubble);
+  } catch { add("bot", "Network problem. Your question was not sent.", ["Error", ""]); }
+  finally { $("askBtn").disabled = false; }
+};
+
+function renderQuiz() {
+  const c = $("course").value;
+  $("quizTitle").textContent = c + " quiz";
+  $("quiz").innerHTML = "";
+  QUIZZES[c].forEach(([q, opts], i) => {
+    const div = document.createElement("div"); div.className = "q";
+    const p = document.createElement("p"); p.textContent = (i + 1) + ". " + q; div.append(p);
+    opts.forEach((o, j) => {
+      const l = document.createElement("label"), inp = document.createElement("input");
+      inp.type = "radio"; inp.name = "q" + (i + 1); inp.value = String.fromCharCode(97 + j);
+      l.append(inp, " " + o); div.append(l);
+    });
+    $("quiz").append(div);
+  });
+  $("quizStatus").textContent = "";
+  $("submitBtn").disabled = false;
+  pendingKey = null;
+}
+$("course").onchange = () => { store.set("course", $("course").value); renderQuiz(); };
+
+let pendingKey = null;  // kept until the server confirms, so pressing Submit again cannot double-submit
+$("quiz").onsubmit = async (e) => {
+  e.preventDefault();
+  const answers = Object.fromEntries(new FormData($("quiz")));
+  pendingKey = pendingKey || uuid();
+  const body = JSON.stringify({ student_id: $("sid").value.trim(), quiz_id: $("course").value + "-quiz1", answers, idempotency_key: pendingKey });
+  $("submitBtn").disabled = true;
+  $("quizStatus").className = ""; $("quizStatus").textContent = "Submitting…";
+  for (let attempt = 0; attempt < 4; attempt++) {  // first try + 3 retries with the same key
+    try {
+      const r = await fetch("/api/quiz/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body });
+      if (r.status === 202 && (await r.json()).status === "committed") {
+        pendingKey = null;
+        $("quizStatus").className = "ok"; $("quizStatus").textContent = "Submitted ✓"; return;
+      }
+    } catch {}
+    $("quizStatus").textContent = "Retrying (" + (attempt + 1) + ")…";
+    await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+  }
+  $("quizStatus").className = "err"; $("quizStatus").textContent = "Not confirmed yet. Press Submit again: it is safe to retry.";
+  $("submitBtn").disabled = false;
+};
+
+async function pollStatus() {
+  try {
+    const s = await (await fetch("/api/status")).json();
+    $("banner").className = s.color; $("banner").textContent = s.banner;
+    const ex = s.exam || {};
+    $("exam").style.display = ex.active ? "block" : "none";
+    if (ex.active) $("exam").textContent = "Exam in progress for " + ex.course +
+      ": the tutor gives hints but no worked solutions" + (ex.ends_at ? " until " + new Date(ex.ends_at).toLocaleTimeString() : "") + ".";
+  } catch {}
+}
+renderQuiz();
+pollStatus();
+setInterval(pollStatus, 3000);
 </script>
 </body>
 </html>

@@ -3,13 +3,17 @@
 Control: in `cascadeshield` mode it follows Fedora's Redis keys while the heartbeat is fresh,
 otherwise (and always in `reactive` mode) its own local breaker. `none` ignores all control.
 Ladder (contracts/control_api.md): 0 full, 1 lean (LLM); 2 cache + RAG, 3 hint, 4 shed (no LLM).
+Exam mode (guide 6.1): a level floor for everyone and, for the exam's course, no solution chunks
+and only vetted cache entries. It applies in reactive and cascadeshield modes, whatever the heartbeat.
 """
 
 import asyncio
+import json
 import logging
 import random
 import time
 import uuid
+from datetime import datetime
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -21,14 +25,16 @@ from prometheus_client import Counter, Gauge
 from pydantic import BaseModel
 
 from cs_common import create_app, settings
+from cs_common.settings import faq_questions
 from cs_common.logging import make_client
 from cs_common.metrics import metric
-from cs_common.redis_client import BREAKER, LEVEL, control_keys, log_action, rds, require_token
+from cs_common.redis_client import (ADMISSION, BREAKER, EXAM, LEVEL, active_exam, control_keys, log_action,
+                                    rds, require_token)
 
 ACTIVE = metric(Gauge, "cs_orch_active_prompts", "Tutor requests in progress")
 LEVEL_G = metric(Gauge, "cs_orch_degradation_level", "Effective degradation level 0-4")
 BREAKER_G = metric(Gauge, "cs_orch_breaker_state", "0 closed, 1 half-open, 2 open")
-RESP = metric(Counter, "cs_orch_responses_total", "Answers by level and source", ("level", "source"))
+RESP = metric(Counter, "cs_orch_responses_total", "Answers by level, source and course", ("level", "source", "course"))
 BREAKER_CODE = {"closed": 0, "half_open": 1, "open": 2}
 LEVEL_TOKENS, LEVEL_CHUNKS = {0: 256, 1: 80}, {0: 3, 1: 1}
 PM = settings.protection_mode
@@ -38,6 +44,7 @@ log = logging.getLogger("orchestrator")
 http = make_client(settings.llm_timeout_s + 2, max_connections=200)
 SYSTEM_PROMPT = (Path(__file__).parent / "prompts" / "socratic.txt").read_text()
 HINTS: dict = yaml.safe_load((settings.data_dir / "hints.yaml").read_text())
+FAQ: dict = yaml.safe_load((settings.data_dir / "faq.yaml").read_text())
 COURSES = [c for c in HINTS if not c.startswith("_")]
 history: dict[str, deque] = defaultdict(lambda: deque(maxlen=4))
 
@@ -79,8 +86,8 @@ local = LocalBreaker()
 ctl = {"source": None}
 
 
-def exam_floor(_keys: dict) -> int:
-    return 0  # Phase 3: minimum level during the exam window
+def exam_floor(exam: dict | None) -> int:
+    return min(4, max(0, int(exam.get("floor", 0)))) if exam else 0
 
 
 async def control() -> dict:
@@ -88,10 +95,11 @@ async def control() -> dict:
     plus where they came from (guide 5.1)."""
     keys = await control_keys()
     if PM == "none":
-        level, breaker, source = 0, "closed", "none"
+        level, breaker, source, exam = 0, "closed", "none", None
     else:
         breaker, source = local.current(), "local"
         level = 0
+        exam = active_exam(keys["exam"])
         age = keys["heartbeat_age"]
         if PM == "cascadeshield" and age is not None and age <= settings.heartbeat_stale_s:
             # Follow Fedora; the local breaker stays as a backup, so take the safer of the two.
@@ -99,7 +107,7 @@ async def control() -> dict:
             level = min(4, max(0, keys["level"] or 0))
             remote = keys["breaker"] if keys["breaker"] in BREAKER_CODE else "closed"
             breaker = max(breaker, remote, key=BREAKER_CODE.get)
-        level = max(level, exam_floor(keys))
+        level = max(level, exam_floor(exam))
         if breaker == "open":
             level = max(level, 2)  # no LLM calls while open
     if source != ctl["source"]:
@@ -110,7 +118,7 @@ async def control() -> dict:
         ctl["source"] = source
     LEVEL_G.set(level)
     BREAKER_G.set(BREAKER_CODE[breaker])
-    return {"level": level, "breaker": breaker, "source": source, "keys": keys}
+    return {"level": level, "breaker": breaker, "source": source, "keys": keys, "exam": exam}
 
 
 # --- answer paths, one per level --------------------------------------------------------------
@@ -120,6 +128,12 @@ class AskBody(BaseModel):
     session_id: str = ""
     course: str
     question: str
+    shed: bool = False  # set by the gateway's admission limiter: go straight to level 4
+    integrity: bool = False  # set here, never trusted from the caller: exam course filter
+
+
+def integrity_for(exam: dict | None, course: str) -> bool:
+    return bool(exam) and exam.get("course") == course
 
 
 async def get_profile(student_id: str) -> dict:
@@ -144,7 +158,7 @@ async def search(question: str, course: str, k: int, timeout: float | None = Non
 
 async def answer_llm(b: AskBody, level: int) -> dict:
     profile = await get_profile(b.student_id)
-    chunks = await search(b.question, b.course, LEVEL_CHUNKS[level])
+    chunks = await search(b.question, b.course, LEVEL_CHUNKS[level], exclude_solutions=b.integrity)
     notes = "\n\n".join(c["text"] for c in chunks) or "(no notes found)"
     turns = history[b.session_id] if level == 0 and b.session_id else ()
     past = "\n".join(f"Student: {q}\nTutor: {a}" for q, a in turns)
@@ -188,7 +202,7 @@ async def answer_cache_rag(b: AskBody) -> dict:
     guiding question. Never calls the LLM; if the RAG service is down, falls to level 3."""
     try:
         r = await http.post(f"{settings.rag_url}/cache/get", timeout=settings.rag_timeout_s,
-                            json={"question": b.question, "course": b.course})
+                            json={"question": b.question, "course": b.course, "vetted_only": b.integrity})
         r.raise_for_status()
         hit = r.json()
         if hit.get("hit"):
@@ -262,7 +276,7 @@ async def drain_once() -> bool:
         if not q:
             continue  # expired
         b = AskBody(student_id=q["student_id"], session_id=q.get("session_id", ""), course=course,
-                    question=q["question"])
+                    question=q["question"], integrity=integrity_for(c["exam"], course))
         try:
             out = await answer_llm(b, c["level"])
             local.record(True)
@@ -286,8 +300,8 @@ async def drain_loop() -> None:
     while True:
         try:
             answered = await drain_once()
-        except Exception:
-            log.exception("shed drain failed")
+        except Exception as e:  # usually a Redis timeout under load: try again next second
+            log.warning("shed drain skipped: %s: %s", type(e).__name__, e)
             answered = False
         await asyncio.sleep(0.2 if answered else 1.0)  # one at a time, so recovery is not stampeded
 
@@ -310,6 +324,10 @@ async def tutor_ask(b: AskBody):
     try:
         c = await control()
         level, breaker = c["level"], c["breaker"]
+        b.integrity = integrity_for(c["exam"], b.course)
+        llm_error = None
+        if b.shed:
+            level = 4
         if level <= 1 and breaker == "half_open" and random.random() >= 0.1:
             level = 2  # only 10% of requests probe the LLM while half-open
         out = None
@@ -319,12 +337,16 @@ async def tutor_ask(b: AskBody):
                 local.record(True)
             except (httpx.HTTPError, KeyError, ValueError) as e:
                 local.record(False)
+                code = e.response.status_code if isinstance(e, httpx.HTTPStatusError) else None
+                llm_error = "timeout" if code in (503, 504) or isinstance(e, httpx.TimeoutException) else "error"
                 if PM == "none":
                     raise HTTPException(504, f"LLM unavailable: {type(e).__name__}")
                 level = 2  # degrade this answer instead of failing it
         if out is None:
             out = await LADDER[level](b)
-        RESP(str(out["level"]), out["source"]).inc()
+        RESP(str(out["level"]), out["source"], b.course).inc()
+        if llm_error:
+            out["llm_error"] = llm_error  # the gateway halves its admission limit on "timeout"
         return out
     finally:
         ACTIVE.dec()
@@ -355,16 +377,32 @@ async def control_state():
             queued = dict(zip(COURSES, await p.execute()))
     except Exception:
         queued = {}
-    return {"level": c["level"], "breaker": c["breaker"], "exam": k["exam"] or {"active": False},
+    try:
+        limit = await rds.get(ADMISSION)
+    except Exception:
+        limit = None
+    exam = c["exam"]
+    if exam and exam.get("ends_at_ts"):
+        exam = {**exam, "remaining_s": round(float(exam["ends_at_ts"]) - time.time())}
+    return {"level": c["level"], "breaker": c["breaker"], "exam": exam or {"active": False},
             "heartbeat_age_s": k["heartbeat_age"], "protection_mode": PM, "control_source": c["source"],
             "requested": {"level": k["level"], "breaker": k["breaker"]}, "local_breaker": local.current(),
-            "shed_queue": queued}
+            "admission_limit": int(limit) if limit else None, "shed_queue": queued, "prewarm": prewarm_status()}
 
 
-class ModeBody(BaseModel):
-    level: int
+class ControlBody(BaseModel):
     reason: str = ""
     actor: str = "operator"
+    risk: float | None = None  # Fedora's failure probability, logged with the action
+    factors: list | dict | None = None  # top SHAP factors, logged for the dashboard
+
+    async def log(self, action: str, value) -> None:
+        await log_action(self.actor, action, value, self.reason, self.risk,
+                         {"factors": self.factors} if self.factors else None)
+
+
+class ModeBody(ControlBody):
+    level: int
 
 
 @app.post("/control/mode", dependencies=[Depends(require_token)])
@@ -372,14 +410,12 @@ async def control_mode(b: ModeBody):
     if not 0 <= b.level <= 4:
         raise HTTPException(422, "level must be 0-4")
     await rds.set(LEVEL, b.level)
-    await log_action(b.actor, "set_level", b.level, b.reason)
+    await b.log("set_level", b.level)
     return {"ok": True}
 
 
-class BreakerBody(BaseModel):
+class BreakerBody(ControlBody):
     state: str
-    reason: str = ""
-    actor: str = "operator"
 
 
 @app.post("/control/breaker", dependencies=[Depends(require_token)])
@@ -387,18 +423,129 @@ async def control_breaker(b: BreakerBody):
     if b.state not in BREAKER_CODE:
         raise HTTPException(422, "state must be closed|half_open|open")
     await rds.set(BREAKER, b.state)
-    await log_action(b.actor, "set_breaker", b.state, b.reason)
+    await b.log("set_breaker", b.state)
     return {"ok": True}
 
 
+class ExamBody(ControlBody):
+    active: bool
+    course: str = ""
+    ends_at: str | None = None  # ISO 8601 with offset; default 2 h from now
+    floor: int = 0  # minimum level for everyone during the window (usually 1, lean)
+
+
 @app.post("/control/exam", dependencies=[Depends(require_token)])
-async def control_exam():
-    raise HTTPException(501, "exam mode arrives in Phase 3")
+async def control_exam(b: ExamBody):
+    if not b.active:
+        await rds.delete(EXAM)
+        await b.log("exam", "off")
+        return {"ok": True, "exam": {"active": False}}
+    if b.course not in COURSES:
+        raise HTTPException(422, f"course must be one of {COURSES}")
+    if not 0 <= b.floor <= 4:
+        raise HTTPException(422, "floor must be 0-4")
+    try:
+        ends = datetime.fromisoformat(b.ends_at).timestamp() if b.ends_at else time.time() + 7200
+    except ValueError:
+        raise HTTPException(422, "ends_at must be ISO 8601, e.g. 2026-11-20T10:30:00+05:30")
+    if ends <= time.time():
+        raise HTTPException(422, "ends_at is in the past")
+    exam = {"active": True, "course": b.course, "ends_at": b.ends_at, "ends_at_ts": round(ends, 3), "floor": b.floor}
+    await rds.set(EXAM, json.dumps(exam), exat=int(ends) + 1)  # the key expires with the exam
+    await b.log("exam", f"on {b.course} floor {b.floor}")
+    return {"ok": True, "exam": exam}
 
 
-@app.post("/control/prewarm", dependencies=[Depends(require_token)])
-async def control_prewarm():
-    raise HTTPException(501, "pre-warm arrives in Phase 3")
+# --- pre-warm (guide 6.2): vetted seed answers first, then level-0 answers one at a time ----------
+
+SEED_FILE = settings.data_dir / "cache_seed.yaml"
+prewarm: dict = {"task": None}
+
+
+def prewarm_status() -> dict:
+    p = {k: v for k, v in prewarm.items() if k != "task"}
+    p["running"] = bool(prewarm["task"] and not prewarm["task"].done())
+    if p.get("started_at"):
+        p["elapsed_s"] = round((p.get("finished_at") or time.time()) - p["started_at"], 1)
+    return p
+
+
+def vetted_seed(course: str) -> dict[str, dict]:
+    try:
+        entries = (yaml.safe_load(SEED_FILE.read_text()) or {}).get(course, [])
+    except (OSError, yaml.YAMLError):
+        return {}
+    return {e["question"]: e for e in entries if e.get("vetted") and e.get("answer")}
+
+
+async def cache_put(course: str, question: str, answer: str, topic: str, vetted: bool) -> None:
+    r = await http.post(f"{settings.rag_url}/cache/put", timeout=settings.rag_timeout_s,
+                        json={"question": question, "course": course, "answer": answer, "topic": topic, "vetted": vetted})
+    r.raise_for_status()
+
+
+async def run_prewarm(course: str, topics: list[str]) -> None:
+    vetted = vetted_seed(course)
+    work = [(t, q) for t in topics for q in faq_questions(FAQ, HINTS, course, t)]
+    prewarm.update(total=len(work))
+    for topic, q in work:
+        for _ in range(2):  # one retry: a transient timeout should not leave a gap
+            if await prewarm_one(course, topic, q, vetted):
+                break
+            await asyncio.sleep(1)
+        else:
+            prewarm["failed"] += 1
+        prewarm["done"] += 1
+    prewarm["finished_at"] = time.time()
+    await log_action("platform", "prewarm_done", course,
+                     f"{prewarm['from_seed']} vetted + {prewarm['generated']} generated, {prewarm['failed']} failed "
+                     f"in {prewarm['finished_at'] - prewarm['started_at']:.0f} s")
+
+
+async def prewarm_one(course: str, topic: str, q: str, vetted: dict) -> bool:
+    try:
+        if q in vetted:
+            await cache_put(course, q, vetted[q]["answer"], topic, True)
+            prewarm["from_seed"] += 1
+        else:
+            while (c := await control())["level"] > 1 or c["breaker"] != "closed":
+                await asyncio.sleep(2)  # never add load to an overloaded LLM
+            b = AskBody(student_id="prewarm", course=course, question=q, integrity=True)
+            out = await answer_llm(b, 0)
+            await cache_put(course, q, out["answer"], topic, False)
+            prewarm["generated"] += 1
+        return True
+    except (httpx.HTTPError, KeyError, ValueError):
+        return False
+
+
+class PrewarmBody(ControlBody):
+    course: str
+    topics: list[str] = []  # empty: every topic of the course
+
+
+@app.post("/control/prewarm", status_code=202, dependencies=[Depends(require_token)])
+async def control_prewarm(b: PrewarmBody):
+    known = list(HINTS.get(b.course, {}))
+    if b.course not in COURSES:
+        raise HTTPException(422, f"course must be one of {COURSES}")
+    bad = [t for t in b.topics if t not in known]
+    if bad:
+        raise HTTPException(422, f"unknown topics {bad}; {b.course} has {known}")
+    if prewarm["task"] and not prewarm["task"].done():
+        raise HTTPException(409, "a pre-warm is already running")
+    topics = b.topics or known
+    prewarm.clear()
+    prewarm.update(course=b.course, topics=topics, done=0, total=0, from_seed=0, generated=0, failed=0,
+                   started_at=time.time(), finished_at=None)
+    prewarm["task"] = asyncio.create_task(run_prewarm(b.course, topics))
+    await b.log("prewarm", f"{b.course} {len(topics)} topics")
+    return prewarm_status()
+
+
+@app.get("/control/prewarm", dependencies=[Depends(require_token)])
+async def control_prewarm_status():
+    return prewarm_status()
 
 
 class AnswerBody(BaseModel):
@@ -425,6 +572,9 @@ async def admin_reset():
     history.clear()
     shed = [k async for k in rds.scan_iter("cs:shed:*", count=500)]
     await rds.mset({LEVEL: 0, BREAKER: "closed"})
+    await rds.delete(EXAM)
+    if prewarm["task"]:
+        prewarm["task"].cancel()
     if shed:
         await rds.delete(*shed)
     hdr = {"X-CS-Token": settings.cs_token}

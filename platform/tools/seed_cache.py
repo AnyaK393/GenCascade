@@ -10,6 +10,7 @@ on every /admin/reset, so the seeded cache is the clean state between episodes.
 """
 
 import argparse
+import sys
 import time
 from pathlib import Path
 
@@ -17,6 +18,9 @@ import httpx
 import yaml
 
 from smoke import env
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from cs_common.settings import faq_questions  # noqa: E402
 
 DATA = Path(__file__).resolve().parents[1] / "data"
 FAQ, SEED = DATA / "faq.yaml", DATA / "cache_seed.yaml"
@@ -34,9 +38,9 @@ def main():
     seed = seed or {}
 
     if not a.load:
-        faq = yaml.safe_load(FAQ.read_text())
-        todo = [(c, t, q) for c, topics in faq.items() if not a.course or c == a.course
-                for t, qs in topics.items() for q in qs]
+        faq, hints = yaml.safe_load(FAQ.read_text()), yaml.safe_load((DATA / "hints.yaml").read_text())
+        todo = [(c, t, q) for c, topics in faq.items() if not c.startswith("_") and (not a.course or c == a.course)
+                for t in topics for q in faq_questions(faq, hints, c, t)]
         done, t_start = 0, time.time()
         with httpx.Client(timeout=60) as http:
             for i, (course, topic, q) in enumerate(todo, 1):

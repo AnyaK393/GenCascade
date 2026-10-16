@@ -6,7 +6,8 @@ PLATFORM_ENV = $(if $(MODE),PROTECTION_MODE=$(MODE)) $(if $(BACKEND),LLM_BACKEND
 VENV_PY = platform/.venv/bin/python
 
 .PHONY: platform-build platform-up platform-down platform-restart platform-logs platform-ps \
-	platform-smoke calibrate platform-ladder platform-breaker seed-cache
+	platform-smoke calibrate platform-ladder platform-breaker seed-cache \
+	platform-exam fairness
 
 platform-build: ## Build the platform image
 	$(COMPOSE) --profile platform build
@@ -39,3 +40,9 @@ platform-breaker: ## Phase 2 check: local breaker and chaos hooks (MODE=reactive
 
 seed-cache: ## Answer data/faq.yaml at level 0 into data/cache_seed.yaml (LOAD=1: reload only)
 	$(VENV_PY) platform/tools/seed_cache.py $(if $(LOAD),--load)
+
+platform-exam: ## Phase 3 check: pre-warm, exam floor, integrity, cache hit rate, quiz p95 (cascadeshield)
+	$(VENV_PY) platform/tools/exam_check.py
+
+fairness: ## Share of degraded answers per course since the orchestrator started
+	@python3 platform/tools/fairness.py

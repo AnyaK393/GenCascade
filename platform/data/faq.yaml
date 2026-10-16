@@ -1,5 +1,12 @@
 # Likely student questions, 5 per topic (guide 5.7). tools/seed_cache.py answers each at level 0
 # and writes data/cache_seed.yaml; Phase 3 pre-warm uses the same questions.
+# _common: asked for every topic too, with {name} = the topic title from hints.yaml in lower case.
+_common:
+- Can you explain {name} simply?
+- What are common mistakes with {name}?
+- What is the key idea behind {name}?
+- Give me a hint about {name}.
+- What should I revise about {name} before the exam?
 DSA101:
   arrays:
   - Why is accessing an array element by index O(1)?

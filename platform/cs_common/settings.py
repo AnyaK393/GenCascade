@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     quiz_timeout_s: float = 2.0
     rate_limit_per_min: int = 6
     heartbeat_stale_s: float = 10.0
+    admission_start: int = 4  # AIMD limit on concurrent tutor requests during an exam (guide 6.1)
+    admission_max: int = 16
+    admission_target_s: float = 8.0  # raise the limit while gateway tutor p95 is under this
+    admission_wait_s: float = 3.0  # then the request is shed to level 4
     shed_max_per_course: int = 500  # level 4 queue cap; beyond it the student gets a hint only
 
     data_dir: Path = PLATFORM_DIR / "data"
@@ -45,3 +49,9 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def faq_questions(faq: dict, hints: dict, course: str, topic: str) -> list[str]:
+    """A topic's FAQ questions plus the _common templates filled with its title."""
+    name = hints.get(course, {}).get(topic, {}).get("title", topic.replace("_", " ")).lower()
+    return list(faq.get(course, {}).get(topic, [])) + [q.format(name=name) for q in faq.get("_common", [])]

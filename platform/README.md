@@ -17,6 +17,8 @@ make platform-ladder            # Phase 2: levels 0-4, breaker, shed queue, fail
 make platform-up MODE=reactive CHAOS=1 BACKEND=mock && make platform-breaker   # local breaker + chaos
 make seed-cache                 # answer data/faq.yaml at level 0 -> data/cache_seed.yaml
 make seed-cache LOAD=1          # reload the file after marking answers vetted: true
+make platform-exam              # Phase 3: pre-warm, exam floor, integrity, hit rate, quiz p95, banner
+make fairness                   # share of degraded answers per course
 make platform-ps / platform-logs / platform-down
 ```
 
@@ -42,7 +44,8 @@ ollama pull qwen2.5:0.5b
 | `services/llm_inference` | :8004 Ollama client, slot semaphore, token telemetry, `LLM_BACKEND=mock` |
 | `mock_llm/` | queueing simulator with the M1's measured 41 tok/s shared across slots |
 | `data/` | `curriculum/<COURSE>/<topic>.md` (3 x 10), `hints.yaml`, `faq.yaml` (5 per topic), `cache_seed.yaml`, `seed.py` (mounted read-only, no rebuild needed) |
-| `tools/` | `calibrate.py`, `smoke.py` (standard library only), `quiz_under_load.py` (guide 5.4), `ladder_check.py`, `breaker_check.py`, `seed_cache.py` |
+| `tools/` | `calibrate.py`, `smoke.py` (standard library only), `quiz_under_load.py` (guide 5.4), `ladder_check.py`, `breaker_check.py`, `seed_cache.py`, `exam_check.py`, `fairness.py` |
+| `web/index.html` | student page: course picker, tutor chat with source tags, 5-question quiz, banner polling `/api/status` every 3 s |
 
 ## Internal routes (not in the contracts)
 
@@ -55,7 +58,13 @@ ollama pull qwen2.5:0.5b
 Public addition: `GET /api/tutor/queued/{queue_id}` returns `{"status":"queued","position":n}` or
 `{"status":"answered","answer",...}`. A level 4 answer carries `queue_id` and `position`.
 
-Mac-only Redis keys: `cs:shed:<course>` (list of queue ids, TTL 6 h, capped at 500) and
+Control API additions: `POST /control/exam` also takes `floor` (0-4, minimum level for everyone);
+`POST /control/prewarm` returns 202 and runs in the background, `GET /control/prewarm` shows progress;
+`/control/mode` and `/control/breaker` also take `risk` and `factors` (logged to `cs:actions`);
+`/control/state` adds `admission_limit`, `shed_queue` and `prewarm`. `GET /api/status` adds `exam`.
+`cs_orch_responses_total` carries a `course` label (guide 6.5).
+
+Mac-only Redis keys: `cs:admission:limit` (gateway AIMD limit, TTL 30 s), `cs:shed:<course>` (list of queue ids, TTL 6 h, capped at 500) and
 `cs:shed:q:<id>` (hash: question, status, answer; TTL 6 h).
 
 ## Control behaviour
@@ -75,3 +84,19 @@ Mac-only Redis keys: `cs:shed:<course>` (list of queue ids, TTL 6 h, capped at 5
   the breaker closed, and caches the answer. Levels 2-4 never call the LLM; RAG down -> level 3.
 - Chaos (`CHAOS_ENABLED=1`, token required): LLM latency is added inside the generation slot; the
   leak stops at 120 MB or 140 MB resident, below the 160 MB limit; `/admin/reset` clears it all.
+
+## Exam mode (Phase 3)
+
+- `POST /control/exam {"active":true,"course":"DSA101","ends_at":"<ISO>","floor":1}` writes
+  `cs:mode:exam` with an expiry at `ends_at`. It applies in `reactive` and `cascadeshield`, even with
+  a stale heartbeat (the exam is still on if Fedora dies); `none` ignores it. `/admin/reset` ends it.
+- Floor: effective level = max(Fedora, local, floor) for every course.
+- Integrity, for the exam's course only: no `solution` chunks anywhere (LLM context, level 2) and
+  only `vetted` cache entries.
+- Gateway admission (P1 tutoring only; P0 quiz submits never wait): AIMD limit starting at 4, +1
+  every 5 s while tutor p95 < `ADMISSION_TARGET_S` (8 s), halved on an LLM timeout (once per 2 s),
+  max 16. Over the limit for 3 s -> level 4 (queued) and `cs_shed_requests_total{priority="P1"}`.
+- Pre-warm: each topic's `faq.yaml` questions plus the `_common` templates. Vetted answers from
+  `cache_seed.yaml` are loaded without the LLM; the rest are generated one at a time at level 0
+  (with the integrity filter) and stored unvetted, so the exam can only serve the vetted ones.
+  It pauses while the level is above 1 or the breaker is not closed.
