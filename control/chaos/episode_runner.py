@@ -272,7 +272,11 @@ def main() -> None:
     with httpx.Client() as client:
         preflight(client, any(p["fault"] for p in plans), args.allow_protection)
         for i, plan in enumerate(plans, start):
-            meta = run_episode(client, cfg, plan, args.out)
+            try:
+                meta = run_episode(client, cfg, plan, args.out)
+            except Exception as e:  # one broken episode must not end an overnight run
+                print(f"[{i}] FAILED {type(e).__name__}: {e}", flush=True)
+                continue
             on = meta["onsets"].get("llm_inference", [])
             status = "ok" if meta["valid"] else "INVALID " + "; ".join(meta["problems"])
             first = f"first llm onset +{on[0] - meta['export_start']:.0f}s" if on else "no llm onset"

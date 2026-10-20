@@ -1,10 +1,10 @@
-# Stays under capacity, so the model learns that load alone is not failure.
+# Stays under capacity (~5 users), so the model learns that load alone is not failure.
 shape: steady_safe
 seed: 44
-users: 12
+users: 3
 ramp_s: 60
 hold_s: 420
 tutor_weight: 7
 quiz_weight: 3
 question_length: short
-course: DSA101
+course: mixed

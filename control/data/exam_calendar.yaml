@@ -1,0 +1,14 @@
+# Exams the control room prepares for (guide 6.6). Times are ISO 8601; without an offset, local time.
+# Topics are the platform's slugs (platform/data/hints.yaml). The dashboard's "Schedule exam in
+# 2 minutes" button adds entries at runtime without editing this file.
+exams:
+  - course: DSA101
+    start: 2026-11-20T09:00:00+05:30
+    duration_min: 90
+    expected_students: 120
+    topics: [bst, heaps, graphs, hashing]
+  - course: OS202
+    start: 2026-11-24T14:00:00+05:30
+    duration_min: 60
+    expected_students: 80
+    topics: [deadlocks, paging, cpu_scheduling]

@@ -1,11 +1,15 @@
-# Main demo scenario: 0 -> peak over ramp_s, hold, then taper.
+# Main demo scenario: a short lead-in at light load, then 0 -> peak over ramp_s, hold, taper.
+# Sized for the calibrated platform (~5 users at level 0, docs/calibration.md): the ramp crosses
+# capacity about 30 s in, after the predictor's 60 s windows are full.
 shape: exam_ramp
 seed: 42
-peak_users: 120
+lead_s: 120
+lead_users: 2
+peak_users: 40
 ramp_s: 240
-hold_s: 300
+hold_s: 240
 taper_s: 60
 tutor_weight: 7
 quiz_weight: 3
 question_length: short   # short | long
-course: DSA101
+course: mixed            # one course code, or mixed

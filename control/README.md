@@ -37,11 +37,12 @@ Pointing at the real Mac: set `PLATFORM_HOST=<mac ip>` in `.env`, then `make pro
 | --- | --- |
 | `prometheus/` | `prometheus.yml`, recording rules, `render_targets.py` (file_sd from `PLATFORM_HOST`) |
 | `chaos/` | `locustfile.py`, `questions.py` (300-question bank), `scenarios/*.yaml` |
-| `resilience_core/` | `main.py` loop, `collector.py`, `risk.py`, `containment.py`, `actuator.py`, `settings.py` |
+| `resilience_core/` | `main.py` loop, `collector.py`, `signals.py`, `features.py`, `model.py`, `predictor.py`, `dependency_graph.py`, `containment_engine.py`, `calendar.py`, `actuator.py`, `risk.py`, `settings.py` |
 | `dashboard/app.py` | Streamlit; reads only the core's `/state` and Redis |
 | `chaos/episode_runner.py`, `chaos/episodes.yaml` | Phase 2 episode runner and its parameter space |
-| `experiments/` | `labels.py`, `build_dataset.py`, `plot_labels.py`; Phase 3-4 training and analysis |
-| `models/` | Phase 3 |
+| `experiments/` | `labels.py`, `build_dataset.py`, `plot_labels.py`, `evaluate.py`, `train.py`, `m3_check.py` |
+| `data/exam_calendar.yaml` | Exams the control room prepares for |
+| `models/` | `<name>.joblib` (git-ignored) + `<name>.json`; `metadata.json` names the active model |
 | `tests/` | `make test` |
 
 ## Settings
@@ -77,3 +78,39 @@ export of every signal in `resilience_core/signals.py` into `data/episodes/<id>/
 with `meta.json` (all parameters, seed, fault log, onsets). An episode is marked invalid if a
 service restarted or a scrape gap exceeds 10 s; `build_dataset` skips it.
 Label and feature definitions: `contracts/features.md`.
+
+## Phase 3: prediction and containment (M3)
+
+```bash
+make dataset && make train        # results/model_results.md, results/reliability.png, models/rf_v1.*
+make platform-mock-up MODE=cascadeshield
+make control-up                   # core loads models/metadata.json; dashboard on :8501
+make m3-check                     # 5 x exam_ramp: breaker opens before p95 > SLO? (needs 4 of 5)
+```
+
+Each 2 s cycle the core reads the last 80 s of every signal, builds the same features as training,
+and predicts per service (`llm_inference`, `orchestrator`, `gateway`; RAG and student keep the
+p95 ÷ SLO risk). Cascade risk combines them over the dependency graph; the containment engine
+acts on the LLM's cascade risk through the control API, with the reason, risk and SHAP factors.
+
+- **Training** (`experiments/train.py`): split by episode (20 % held out per category), GroupKFold
+  out-of-fold scores for isotonic calibration and the threshold (lowest with ≤ 1 false alarm per
+  hour), logistic regression / random forest / XGBoost compared with the Phase 1 threshold rule,
+  an unseen-fault test (no `leak` in training), and a time-to-failure regressor. Saved models are
+  refitted on every episode; their metadata carries the holdout numbers.
+- **Predictor**: refuses to start if feature columns differ from the model's; SHAP top-3 factors in
+  plain words go to `cs:explain:<service>`. No model trained yet: the core falls back to the threshold risk.
+- **Dependency graph weights** (`dependency_graph.py`): 0.9 for synchronous calls with no fallback
+  (gateway → orchestrator, orchestrator → LLM), 0.6 for a synchronous call with a degraded fallback
+  (orchestrator → RAG), 0.3 for a default fallback or isolated pool (→ student). The blast radius is
+  the set of services pushed over 0.5 by the riskiest node.
+- **Containment engine** (`containment_engine.py`): lean at R ≥ 0.6 for 6 s; breaker open + L2 at
+  R ≥ threshold for 4 s; L3 if still rising 30 s later; L4 if admission is at its minimum and the
+  queue grows; one step down per 30 s of R < 0.5 (2/open → 1/half-open → 1/closed → 0). At most one
+  change per 10 s, except opening the breaker.
+- **Operator controls** (dashboard sidebar → core `/ops/*`, token required): controller
+  (`predictive` | `threshold` | `reactive`), dry run (log only), approval mode (Approve / Reject),
+  dependency graph on/off (ablation), kill switch (stops actions and drops the heartbeat at once,
+  so the platform's failsafe takes over), "Schedule exam in 2 minutes", reload model.
+- **Exam calendar** (`calendar.py`, `data/exam_calendar.yaml`): pre-warm 10 min before, exam mode
+  at the start (floor 1 if expected students exceed `CS_CAPACITY_USERS`, default 5), off at the end.

@@ -18,7 +18,7 @@ define stop
 endef
 
 .PHONY: control-setup prom-targets prom-up control-up control-down platform-mock-up platform-mock-down \
-	check core dashboard load locust-ui test control-logs control-status episodes episodes-plan dataset
+	check core dashboard load locust-ui test control-logs control-status episodes episodes-plan dataset train m3-check
 
 control-setup: ## Install control-room Python deps with uv
 	cd control && $(UV) sync
@@ -83,3 +83,9 @@ episodes-plan: ## Print the next N episode plans without running them
 dataset: ## Build control/data/train.parquet from valid episodes, then plot label checks
 	cd control && PYTHONPATH=. $(PY) -m experiments.build_dataset
 	cd control && PYTHONPATH=. $(PY) -m experiments.plot_labels
+
+train: ## Train, calibrate and evaluate models; activates rf_v1 (results/model_results.md)
+	cd control && PYTHONPATH=. $(PY) -m experiments.train
+
+m3-check: ## M3: breaker opens before p95 > SLO on exam_ramp (platform cascadeshield, core live)
+	cd control && PYTHONPATH=. $(PY) -m experiments.m3_check --runs $(or $(RUNS),5) --scenario $(or $(SCENARIO),exam_ramp)

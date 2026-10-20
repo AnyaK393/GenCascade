@@ -47,8 +47,9 @@ def _merge(mask: np.ndarray, gap_s: float) -> np.ndarray:
 
 def failed_state(own: pd.DataFrame, slo_s: float, queue: pd.Series | None = None) -> pd.Series:
     """own: one service's signals on the time grid (index t). queue: llm queue depth, if it applies."""
-    p95 = own["p95_s"].ffill(limit=SPARSE_FILL_ROWS).fillna(0).to_numpy()
-    err = own["error_rate"].fillna(0).to_numpy()
+    zero = pd.Series(0.0, index=own.index)  # a signal with no series at all (e.g. no 5xx yet) is 0
+    p95 = own.get("p95_s", zero).ffill(limit=SPARSE_FILL_ROWS).fillna(0).to_numpy()
+    err = own.get("error_rate", zero).fillna(0).to_numpy()
     failed = _held(p95 > slo_s, HOLD_S) | _held(err > ERROR_LIMIT, HOLD_S)
     if queue is not None:
         failed |= queue.fillna(0).to_numpy() > QUEUE_LIMIT
@@ -81,7 +82,7 @@ def episode_labels(series: pd.DataFrame, services: list[str], slo_s: dict[str, f
     slo_s = slo_s or settings.slo_s
     grid = np.arange(series["t"].min(), series["t"].max() + STEP_S / 2, STEP_S)
     by = {s: g.set_index("t").reindex(grid) for s, g in series.groupby("service")}
-    queue = by["llm_inference"]["queue_depth"] if "llm_inference" in by else None
+    queue = by["llm_inference"].get("queue_depth") if "llm_inference" in by else None
     out = {}
     for s in services:
         if s not in by:

@@ -84,3 +84,9 @@ def test_episode_labels_per_service():
     labs = episode_labels(s, ["llm_inference", "gateway"])
     assert labs["llm_inference"]["failed"].any()  # queue_depth passes 30
     assert set(labs) == {"llm_inference", "gateway"}
+
+
+def test_labels_tolerate_missing_signal_columns():
+    s = synthetic_series(80).drop(columns=["error_rate"])
+    labs = episode_labels(s, ["gateway"])
+    assert "y" in labs["gateway"]
