@@ -19,7 +19,7 @@ import gevent
 import yaml
 from locust import HttpUser, LoadTestShape, between, task
 
-from chaos.questions import bank
+from chaos.questions import COURSES, bank
 from resilience_core.settings import settings
 
 SCENARIO_DIR = Path(__file__).parent / "scenarios"
@@ -37,7 +37,9 @@ def load_scenario(name_or_path: str) -> dict:
 SCENARIO = load_scenario(os.environ.get("CS_SCENARIO", "exam_ramp"))
 SEED = int(SCENARIO.get("seed", 0))
 random.seed(SEED)
-QUESTIONS = bank(SCENARIO.get("course", "DSA101"), SCENARIO.get("question_length", "short"))
+# course: one course code, or "mixed" for students spread over every course
+COURSE_CHOICES = COURSES if SCENARIO.get("course", "mixed") == "mixed" else [SCENARIO["course"]]
+QUESTIONS = {c: bank(c, SCENARIO.get("question_length", "short")) for c in COURSE_CHOICES}
 _user_ids = itertools.count()
 
 
@@ -58,12 +60,13 @@ class TutorStudent(HttpUser):
         self.rng = user_rng()
         self.student_id = f"s{self.rng.randrange(10**6):06d}"
         self.session_id = rng_uuid(self.rng)
+        self.course = self.rng.choice(COURSE_CHOICES)
 
     @task
     def ask(self):
-        topic, question = self.rng.choice(QUESTIONS)
+        topic, question = self.rng.choice(QUESTIONS[self.course])
         body = {"student_id": self.student_id, "session_id": self.session_id,
-                "course": SCENARIO.get("course", "DSA101"), "question": question}
+                "course": self.course, "question": question}
         with self.client.post("/api/tutor/ask", json=body, name="/api/tutor/ask",
                               timeout=60, catch_response=True) as r:
             if r.status_code >= 400:
@@ -153,7 +156,12 @@ class ScenarioShape(LoadTestShape):
     """The one shape class Locust sees; the YAML's `shape` picks the curve."""
 
     def tick(self):
-        target = SHAPES[SCENARIO["shape"]](self.get_run_time(), SCENARIO)
+        # optional lead-in at light load before the shape starts (students already online)
+        t, lead_s = self.get_run_time(), SCENARIO.get("lead_s", 0)
+        if t < lead_s:
+            target = SCENARIO.get("lead_users", 1)
+        else:
+            target = SHAPES[SCENARIO["shape"]](t - lead_s, SCENARIO)
         if target is None:
             return None
         users = round(target)

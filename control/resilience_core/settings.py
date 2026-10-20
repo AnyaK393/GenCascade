@@ -19,15 +19,19 @@ SERVICE_PORTS = {
 }
 SERVICES = list(SERVICE_PORTS)
 
-# p95 latency SLOs in seconds. Placeholders until docs/calibration.md lands;
-# override with CS_SLO_<SERVICE>=<seconds>.
+# p95 latency SLOs in seconds; override with CS_SLO_<SERVICE>=<seconds>.
+# llm_inference: 3 x unloaded p95 (5.36 s) from docs/calibration.md. orchestrator and gateway
+# carry the LLM call plus their own hops, so they get 2 s of headroom over it. rag and student
+# have their own timeouts on the Mac (1 s, 0.3 s); the SLOs sit at those.
 DEFAULT_SLO_S = {
-    "gateway": 12.0,
-    "student": 0.5,
-    "orchestrator": 12.0,
+    "gateway": 18.0,
+    "student": 0.3,
+    "orchestrator": 18.0,
     "curriculum_rag": 1.0,
-    "llm_inference": 10.0,
+    "llm_inference": 16.0,
 }
+# Unloaded tokens/s per request (docs/calibration.md), the baseline for the tokens/s ratio feature.
+TOKENS_PER_S_BASELINE = float(os.environ.get("CS_TOKENS_PER_S_BASELINE", "42.1"))
 
 
 def _env(name: str, default: str) -> str:

@@ -103,6 +103,7 @@ wheels = [
 name = "cascadeshield-control"
 version = "0.1.0"
 source = { virtual = "." }
+default-groups = ["dev", "ml"]
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },

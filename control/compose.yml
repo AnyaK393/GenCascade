@@ -20,21 +20,5 @@ services:
       - prometheus-data:/prometheus
     restart: unless-stopped
 
-  # Local stand-in for the Mac's Redis, used only with the mock platform.
-  redis-mock:
-    profiles: ["mock"]
-    image: docker.io/library/redis:7.4-alpine
-    network_mode: host
-    command:
-      - redis-server
-      - --port
-      - "6379"
-      - --requirepass
-      - ${REDIS_PASSWORD:-dev-redis}
-      - --maxmemory
-      - 64mb
-      - --maxmemory-policy
-      - volatile-lru
-
 volumes:
   prometheus-data:

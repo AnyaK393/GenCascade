@@ -6,22 +6,11 @@ import math
 
 import httpx
 
+from .signals import QUALITY_SIGNALS, SIGNALS
+
 log = logging.getLogger(__name__)
 
-# snapshot key -> PromQL. Recording rules keep definitions identical for every consumer.
-QUERIES = {
-    "p95_s": "cs:latency_p95:15s",
-    "error_rate": "cs:error_rate:15s",
-    "rps": "cs:rps:15s",
-    "inflight": "cs_inflight_requests",
-    "rss_bytes": "process_resident_memory_bytes",
-    "cpu_rate": "rate(process_cpu_seconds_total[15s])",
-    "queue_depth": "cs_llm_queue_depth",
-    "tokens_per_s": "cs_llm_tokens_per_second",
-    "sessions_active": "cs_sessions_active",
-    "degradation_level": "cs_orch_degradation_level",
-    "breaker_state": "cs_orch_breaker_state",
-}
+QUERIES = {k: v for k, v in SIGNALS.items() if k not in QUALITY_SIGNALS}
 
 
 class TelemetryError(RuntimeError):

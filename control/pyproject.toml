@@ -25,9 +25,10 @@ ml = ["scikit-learn>=1.5", "shap>=0.46", "xgboost>=2.1", "joblib>=1.4", "matplot
 
 [tool.uv]
 package = false
-default-groups = ["dev"]
+default-groups = ["dev", "ml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
+filterwarnings = ["ignore::gevent.monkey.MonkeyPatchWarning"]  # importing the locustfile in tests

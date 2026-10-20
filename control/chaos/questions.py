@@ -2,10 +2,19 @@
 
 import itertools
 
+# Topic titles as in platform/data/hints.yaml, so the platform's topic detection, RAG and
+# semantic cache see realistic questions.
 TOPICS = {
-    "DSA101": ["arrays", "linked lists", "stacks", "queues", "binary search trees", "heaps",
-               "hash tables", "graphs", "sorting", "recursion"],
+    "DSA101": ["arrays", "linked lists", "stacks and queues", "hash tables", "recursion", "sorting",
+               "binary search", "binary search trees", "heaps and priority queues", "graphs, BFS and DFS"],
+    "DBMS201": ["the entity-relationship model", "relational keys", "SQL basics", "joins", "normalization",
+                "B+ tree indexing", "ACID transactions", "concurrency control", "query optimization",
+                "database recovery"],
+    "OS202": ["processes", "threads", "CPU scheduling", "process synchronization", "deadlocks",
+              "memory management", "paging", "virtual memory and page replacement", "file systems",
+              "disk scheduling"],
 }
+COURSES = list(TOPICS)
 
 SHORT = [
     "What is a {t}?",

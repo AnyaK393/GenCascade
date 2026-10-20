@@ -18,7 +18,7 @@ define stop
 endef
 
 .PHONY: control-setup prom-targets prom-up control-up control-down platform-mock-up platform-mock-down \
-	check core dashboard mock load locust-ui test control-logs control-status
+	check core dashboard load locust-ui test control-logs control-status episodes episodes-plan dataset
 
 control-setup: ## Install control-room Python deps with uv
 	cd control && $(UV) sync
@@ -39,13 +39,11 @@ control-down: ## Stop the core, dashboard and Prometheus
 	$(call stop,core)
 	$(COMPOSE) --profile control down
 
-platform-mock-up: ## Start the local mock platform (Redis container + 5 mock services)
-	$(COMPOSE) --profile mock up -d
-	$(call bg,mock,$(PY) -m mock_platform.run_all)
+platform-mock-up: ## Run the Mac's platform here with the mock LLM and chaos hooks (MODE=none by default)
+	$(MAKE) platform-up BACKEND=mock CHAOS=1 MODE=$(or $(MODE),none)
 
-platform-mock-down: ## Stop the mock platform
-	$(call stop,mock)
-	$(COMPOSE) --profile mock down
+platform-mock-down: ## Stop the local platform
+	$(MAKE) platform-down
 
 check: ## Check the platform exposes every contract metric
 	python3 scripts/check_contracts.py
@@ -55,9 +53,6 @@ core: ## Run the resilience core in the foreground
 
 dashboard: ## Run the dashboard in the foreground
 	cd control && PYTHONPATH=. $(PY) -m streamlit run dashboard/app.py
-
-mock: ## Run the mock platform services in the foreground
-	cd control && PYTHONPATH=. $(PY) -m mock_platform.run_all
 
 load: ## Headless Locust run: make load SCENARIO=exam_ramp
 	@mkdir -p control/results
@@ -78,3 +73,13 @@ control-status: ## Show what is running and the core's latest state
 	@for f in control/$(RUN_DIR)/*.pid; do [ -f $$f ] && n=$$(basename $$f .pid) && \
 		(kill -0 $$(cat $$f) 2>/dev/null && echo "up    $$n" || echo "dead  $$n"); done; true
 	@curl -s localhost:8600/state | python3 -c 'import json,sys; s=json.load(sys.stdin); print("core healthy:", s.get("healthy"), "| risk:", s.get("risk"), "| platform:", s.get("platform"))' 2>/dev/null || echo "core not reachable"
+
+episodes: ## Record dataset episodes: make episodes N=30 [SEED=2026] (platform in MODE=none, CHAOS=1)
+	cd control && PYTHONPATH=. $(PY) -m chaos.episode_runner --n $(or $(N),1) --seed $(or $(SEED),2026)
+
+episodes-plan: ## Print the next N episode plans without running them
+	cd control && PYTHONPATH=. $(PY) -m chaos.episode_runner --n $(or $(N),60) --seed $(or $(SEED),2026) --dry-run
+
+dataset: ## Build control/data/train.parquet from valid episodes, then plot label checks
+	cd control && PYTHONPATH=. $(PY) -m experiments.build_dataset
+	cd control && PYTHONPATH=. $(PY) -m experiments.plot_labels

@@ -1,0 +1,42 @@
+# Episode runner parameter space (guide 5.2). Every episode's drawn values and seed go to its meta.json.
+
+# Locust users the platform sustains at level 0 without queueing. From docs/calibration.md:
+# 41 tok/s shared, ~205 output tokens per level-0 answer -> ~0.2 answers/s. A tutor user asks
+# every ~14 s + latency (~0.05/s) and 70 % of users are tutors -> ~5 users. Re-check after a pilot.
+capacity_users: 5
+max_users: 300
+
+duration_s: [360, 480]      # load shape per episode, after the lead-in
+# Light load before the shape starts, so the 60 s feature windows and the 90 s label horizon are
+# complete before the earliest possible onset (a pilot collapsed 40 s into an un-led ramp).
+lead_s: [90, 150]
+lead_users_x_capacity: [0.2, 0.4]
+settle_s: 20                # after reset, before load
+tail_s: 6                   # after load, so the last scrapes land before export
+
+mix:                        # target share of episodes
+  fail: 0.60                # ramps above capacity, with and without faults
+  safe: 0.25                # steady_safe and ramps below capacity
+  fault_only: 0.15          # moderate load plus a fault
+
+fail:
+  shapes: {exam_ramp: 0.6, deadline_wave: 0.25, flash_burst: 0.15}
+  peak_x_capacity: [1.3, 15]  # log-uniform multiple of capacity_users, capped at max_users
+  ramp_s: [120, 360]
+  fault_prob: 0.5
+
+safe:
+  shapes: {steady_safe: 0.6, exam_ramp: 0.4}
+  users_x_capacity: [0.2, 0.75]
+
+fault_only:
+  users_x_capacity: [0.4, 0.8]
+
+question_length: {short: 0.7, long: 0.3}
+
+faults:                     # target, hook, parameter ranges
+  latency:  {service: llm_inference, hook: latency, extra_ms: [500, 3000], seconds: [60, 240]}
+  leak:     {service: llm_inference, hook: leak, mb_per_s: [0.5, 2.0], seconds: [60, 180]}
+  errors:   {service: llm_inference, hook: errors, rate: [0.05, 0.3], seconds: [30, 120]}
+  slow_rag: {service: curriculum_rag, hook: latency, extra_ms: [300, 1500], seconds: [60, 180]}
+fault_start_s: [30, -90]    # from the shape start (after the lead-in); negative = before its end

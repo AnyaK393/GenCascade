@@ -4,3 +4,4 @@ data/episodes/
 data/*.parquet
 prometheus/targets/*.json
 !prometheus/targets/.gitkeep
+data/dataset_summary.txt
