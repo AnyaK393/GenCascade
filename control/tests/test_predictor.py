@@ -54,4 +54,5 @@ def test_describe():
     assert describe("llm_tokens_per_s_delta30", -5, 0.1) == "Tokens per second falling"
     assert describe("llm_tokens_per_s", 12, 0.1) == "Tokens per second low"
     assert describe("p95_s_std30", 3, 0.1) == "Latency p95 unstable"
+    assert describe("p95_s_std30", 0, 0.1) == "Latency p95 steady"
     assert describe("sessions_active", 40, 0.3) == "Active sessions high"

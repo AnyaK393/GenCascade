@@ -1,27 +1,53 @@
 {
-  "trained_at": "2026-10-20 19:01",
+  "trained_at": "2026-10-20 21:21",
   "episodes": [
     "20261017-004138_exam_ramp_nofault_s2026000",
     "20261017-005037_exam_ramp_slow_rag_s2026001",
-    "20261017-010018_deadline_wave_latency_s2026002"
+    "20261017-010018_deadline_wave_latency_s2026002",
+    "20261020-190824_steady_safe_nofault_s2026003",
+    "20261020-191747_steady_safe_leak_s2026004",
+    "20261020-192708_flash_burst_leak_s2026005",
+    "20261020-193713_exam_ramp_nofault_s2026006",
+    "20261020-194629_exam_ramp_nofault_s2026007",
+    "20261020-195713_exam_ramp_nofault_s2026008",
+    "20261020-200715_steady_safe_nofault_s2026009",
+    "20261020-201739_deadline_wave_latency_s2026010",
+    "20261020-202946_exam_ramp_latency_s2026011",
+    "20261020-203848_flash_burst_leak_s2026012",
+    "20261020-204815_steady_safe_nofault_s2026013",
+    "20261020-205755_exam_ramp_latency_s2026014"
   ],
   "label_horizon_s": 90,
   "eval_service": "llm_inference",
   "holdout_metrics": {
     "model": "rf_v1",
-    "threshold": 0.69,
-    "onsets": 1,
+    "threshold": 0.86,
+    "onsets": 3,
+    "recall": 0.6666666666666666,
+    "false_alarms": 0,
+    "safe_hours": 0.151,
+    "false_alarms_per_hour": 0.0,
+    "lead_median_s": 10.0,
+    "lead_p10_s": 5.2,
+    "pr_auc": 0.5300662867143976,
+    "rows": 407,
+    "positive_rate": 0.3316953316953317
+  },
+  "unseen_fault": {
+    "threshold": 0.41,
+    "onsets": 2,
     "recall": 1.0,
     "false_alarms": 2,
-    "safe_hours": 0.03,
-    "false_alarms_per_hour": 66.66666666666667,
-    "lead_median_s": 90.0,
-    "lead_p10_s": 90.0,
-    "pr_auc": 0.7292270531400966,
-    "rows": 99,
-    "positive_rate": 0.45454545454545453
+    "safe_hours": 0.153,
+    "false_alarms_per_hour": 13.043478260869566,
+    "lead_median_s": 4.0,
+    "lead_p10_s": 4.0,
+    "pr_auc": 0.20085251149802408,
+    "rows": 366,
+    "positive_rate": 0.2459016393442623,
+    "train_episodes": 12,
+    "test_episodes": 3
   },
-  "unseen_fault": {},
   "threshold_rule": "lowest threshold with <= 1 false alarm per hour, out-of-fold on all episodes",
   "name": "rf_v1",
   "file": "rf_v1.joblib",
@@ -91,5 +117,5 @@
     "svc_orchestrator",
     "svc_gateway"
   ],
-  "threshold": 0.89
+  "threshold": 0.67
 }

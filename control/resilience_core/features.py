@@ -53,6 +53,10 @@ def _service_frame(series: pd.DataFrame, service: str, grid: pd.Index) -> pd.Dat
     for col in df.columns:
         if col in SPARSE:
             df[col] = df[col].ffill(limit=SPARSE_FILL_ROWS)
+    if "tokens_per_s" in df:
+        # 0 or missing means nothing was generated recently (e.g. a fresh platform), not a slow
+        # model: use the calibrated baseline so "no evidence" never reads as "extremely slow".
+        df["tokens_per_s"] = df["tokens_per_s"].where(df["tokens_per_s"] > 0, TOKENS_PER_S_BASELINE)
     return df.fillna(0.0)
 
 

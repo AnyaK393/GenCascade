@@ -49,6 +49,9 @@ in `control/models/metadata.json`; the live predictor refuses to run on a mismat
 
 Missing values: latency-like signals (`p95_s`, queue wait, prompt tokens, tokens/s) are carried
 forward for up to 14 s, then 0; every other missing value is 0.
+Exception: `tokens_per_s` that is 0 or still missing after that means nothing was generated recently
+(e.g. a freshly started platform); it is set to the calibrated baseline (42.1) so that "no data" never
+reads as "extremely slow". Found live: an idle, just-restarted platform scored 0.65 risk without it.
 
 ### Deviation from the guide (5.3)
 

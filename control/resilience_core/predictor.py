@@ -42,7 +42,7 @@ def describe(feature: str, value: float, shap_value: float) -> str:
     if stat in TREND or feature in DIRECTIONAL:
         return f"{name} {'growing' if value > 0 else 'falling' if value < 0 else 'flat'}"
     if stat.startswith("_std"):
-        return f"{name} {'unstable' if shap_value > 0 else 'steady'}"
+        return f"{name} {'unstable' if value > 0 else 'steady'}"
     high = shap_value > 0
     if base in LOW_IS_BAD:
         high = not high

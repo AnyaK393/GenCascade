@@ -1,25 +1,37 @@
 {
-  "trained_at": "2026-10-20 19:01",
+  "trained_at": "2026-10-20 21:21",
   "episodes": [
     "20261017-004138_exam_ramp_nofault_s2026000",
     "20261017-005037_exam_ramp_slow_rag_s2026001",
-    "20261017-010018_deadline_wave_latency_s2026002"
+    "20261017-010018_deadline_wave_latency_s2026002",
+    "20261020-190824_steady_safe_nofault_s2026003",
+    "20261020-191747_steady_safe_leak_s2026004",
+    "20261020-192708_flash_burst_leak_s2026005",
+    "20261020-193713_exam_ramp_nofault_s2026006",
+    "20261020-194629_exam_ramp_nofault_s2026007",
+    "20261020-195713_exam_ramp_nofault_s2026008",
+    "20261020-200715_steady_safe_nofault_s2026009",
+    "20261020-201739_deadline_wave_latency_s2026010",
+    "20261020-202946_exam_ramp_latency_s2026011",
+    "20261020-203848_flash_burst_leak_s2026012",
+    "20261020-204815_steady_safe_nofault_s2026013",
+    "20261020-205755_exam_ramp_latency_s2026014"
   ],
   "label_horizon_s": 90,
   "eval_service": "llm_inference",
   "holdout_metrics": {
     "model": "lr_v1",
-    "threshold": 0.89,
-    "onsets": 1,
+    "threshold": 0.68,
+    "onsets": 3,
     "recall": 0.0,
     "false_alarms": 0,
-    "safe_hours": 0.03,
+    "safe_hours": 0.151,
     "false_alarms_per_hour": 0.0,
     "lead_median_s": NaN,
     "lead_p10_s": NaN,
-    "pr_auc": 0.8758618978131173,
-    "rows": 99,
-    "positive_rate": 0.45454545454545453
+    "pr_auc": 0.4387405017086352,
+    "rows": 407,
+    "positive_rate": 0.3316953316953317
   },
   "unseen_fault": null,
   "threshold_rule": "lowest threshold with <= 1 false alarm per hour, out-of-fold on all episodes",
@@ -91,5 +103,5 @@
     "svc_orchestrator",
     "svc_gateway"
   ],
-  "threshold": 0.81
+  "threshold": 0.85
 }

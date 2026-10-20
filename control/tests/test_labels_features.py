@@ -90,3 +90,11 @@ def test_labels_tolerate_missing_signal_columns():
     s = synthetic_series(80).drop(columns=["error_rate"])
     labs = episode_labels(s, ["gateway"])
     assert "y" in labs["gateway"]
+
+
+def test_zero_tokens_per_second_means_no_data_not_slow():
+    from resilience_core.settings import TOKENS_PER_S_BASELINE
+    s = synthetic_series(60)
+    s.loc[s["service"] == "llm_inference", "tokens_per_s"] = 0.0
+    f = build_features(s)
+    assert (f["llm_tokens_per_s"] == TOKENS_PER_S_BASELINE).all()
