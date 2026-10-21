@@ -1,0 +1,474 @@
+id,course,question,answer,rating
+1,DSA101,"When should I use graphs, BFS and DFS?","When considering graph algorithms, BFS (Breadth-First Search) is ideal when you're looking for the shortest path between two vertices or the shortest path in a directed graph, and you want to return the path. DFS (Depth-First Search) is more suitable for traversing trees and graphs, but you might also consider it when you want to find a path that visits every vertex in an",
+2,DSA101,How are hash tables different from arrays?,"To understand hash tables, it's important to distinguish them from arrays. Hash tables store data using a hash function, which maps keys to bucket indices. While arrays are one-dimensional, hash tables can be multidimensional as well. However, arrays are more efficient for inserts, appends, and traversals. 
+
+In a hash table, the number of buckets is fixed, whereas in an array, the number of elements is variable. Hash tables also provide better average case time complexity for inserts and appends than arrays, with a worst-case time complexity of O(n) in the average case due to collisions.
+
+The student question asked about how hash tables differ from arrays. To answer this, we need to understand the fundamental difference between arrays and hash tables: arrays are one-dimensional, whereas hash tables are multidimensional. For example, an array stores a sequence of values in a linear fashion: `[1, 2, 3, 4, 5]`. In contrast, a hash table stores keys and values in a table-like structure, allowing for efficient insertion, deletion, and lookup of values.
+
+By learning about hash tables and understanding their advantages over arrays, the student will be better equipped to tackle real-world problems, such as implementing efficient data structures for applications like databases,",
+3,OS202,"Give me a hint about threads, please.",Why is switching between threads cheaper than switching between processes?,
+4,OS202,How do I debug virtual memory and page replacement?,"From the course notes (Virtual memory and page replacement, Concept):
+
+Virtual memory loads pages on demand, so a process can be larger than RAM. A page fault brings a page in, evicting another by a replacement policy (FIFO, LRU, optimal). Too little memory leads to thrashing.
+
+Think about it: When a page must leave, which one has gone unused the longest?",
+5,DBMS201,How do I implement joins in Python?,"To implement joins in Python, you can use libraries such as `pymysql` (for MySQL) or `psycopg2` (for PostgreSQL). Here's a basic example of how you can achieve this using `pymysql`:
+```python
+import pymysql
+
+# Connect to the database
+connection = pymysql.connect(host='localhost', user='root', password='password', db='your_database')
+
+# Prepare the query
+query = ""SELECT students.*, courses.name AS course_name FROM students LEFT JOIN courses ON students.id = courses.student_id""
+
+try:
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        results = cursor.fetchall()
+        for row in results:
+            print(row)
+
+finally:
+    connection.close()
+```
+
+This is a good practice to avoid SQL injection by using parameterized queries, but it's a simple demonstration to show how you can use the `pymysql` library with joins.",
+6,DBMS201,What is a concurrency control?,Which pairs of operations conflict? Think of the same item with at least one write.,
+7,OS202,Is my understanding of memory management correct?,What would make every free piece of memory usable by any process?,
+8,DSA101,What is the time complexity of recursion?,"The time complexity of a recursive function is O(n), where n is the number of recursive calls. The number of recursive calls is determined by the depth of the recursion.",
+9,DSA101,"How do I implement binary search in Python, please?","To implement binary search in Python, you can follow these steps:
+
+  1. Define a function called `binary_search` that takes two parameters, `arr` and `target`.
+  2. Check if `arr` is empty or if `target` is equal to `arr[0]`. If so, return -1 to indicate the element was not found.
+  3.",
+10,DSA101,"Is my understanding of binary search trees correct, please?","To determine if your understanding of binary search trees is correct, let's break down the concept step by step. 
+
+### Understanding Binary Search Trees
+Binary search trees (BSTs) are self-balancing binary trees that maintain the property of each node having exactly two children, where each child either contains a greater value or a smaller value than its parent. This ensures that after each insertion or deletion operation,",
+11,OS202,What should I revise about threads before the exam?,"To prepare for the exam, focus on revising key concepts related to threads. Understand that the kernel schedules only one thread at a time on one core. This means you should have a good understanding of how threads work in the context of the kernel and how to manage them efficiently within the system.",
+12,OS202,Is my understanding of deadlocks correct?,"From the course notes (Deadlocks, Practice question):
+
+With Available = (3, 3, 2), decide whether a given Banker's state is safe.
+
+Think about it: If every thread takes locks in the same global order, can a cycle form?",
+13,DSA101,"How do I debug linked lists, please?","Debugging linked lists involves understanding their structure and performance. A common technique is to use the Floyd's Tortoise and Hare algorithm, which can be applied to both singly and doubly linked lists. This algorithm helps in detecting cycles in the list, which can be crucial for identifying issues like edge cases or incorrect node accesses.",
+14,DSA101,What is the time complexity of heaps and priority queues?,"Heaps and priority queues have a time complexity of O(log n) operations. Heaps use a binary heap structure with a max-heap property, while priority queues use a min-heap structure to maintain a priority queue.",
+15,DBMS201,"What are common mistakes with normalization, please?","From the course notes (Normalization, Common mistakes):
+
+Decomposing without checking that the join is lossless. Assuming 3NF and BCNF are always the same.
+
+Think about it: Which attribute depends on only part of the key?",
+16,OS202,"How do I debug paging, please?","To debug paging, you'll need to understand how paging works in a system, including how it manages external fragmentation and how page faults are handled. Once you have that understanding, you can explain how to identify and fix external fragmentation.",
+17,DBMS201,What are common mistakes with ACID transactions?,"Common mistakes with ACID transactions include:
+
+1. Writing to the disk before commit: This can lead to inconsistent states if the data is not yet committed.
+2. Not handling errors: Errors like disk corruption or network failures can cause transactions to fail.
+3. Not storing the LSN: LSNs (Logical Segment Numbers) are necessary for ACID transactions and provide transaction isolation.
+4. Reusing LSNs: The same LSNs should not be used for multiple transactions to maintain consistency.
+5. Ignoring LSNs: LSNs are used for transaction isolation but not for undoing commits or errors.
+6. Not using a database isolation level: Different isolation levels ensure different behaviors, like read uncommitted or read committed.
+7. Mixing ACID with non-ACID properties: A transaction should be atomic and consistent, but ACID transactions can be combined with non-ACID operations for complex scenarios.",
+18,DBMS201,Can you explain normalization simply?,"From the course notes (Transactions and ACID, Practice question):
+
+Explain which ACID property write-ahead logging provides and how.
+
+Think about it: If the system crashes halfway through, what should the database look like afterwards?",
+19,DBMS201,"How are relational keys different from arrays, please?","From the course notes (Relational model and keys, Practice question):
+
+List all candidate keys of R(A, B, C, D) with A -> B, B -> C and C -> D.
+
+Think about it: Which attributes, if you know them, pin down exactly one row?",
+20,DSA101,"What is a graphs, BFS and DFS?","A graph is a set of vertices (nodes) connected by edges (lines) that form the structure of a tree or a network. It is a collection of vertices (nodes) and a set of edges connecting pairs of vertices, forming a structure where any two vertices are connected by a path. For example, the complete graph with 5 vertices can be represented as {A, B, C,",
+21,OS202,How are disk scheduling different from arrays?,"From the course notes (Disk scheduling, Concept):
+
+Disk scheduling orders requests to reduce head movement. FCFS is fair but slow, SSTF picks the nearest request (and can starve far ones), SCAN sweeps like an elevator, and C-SCAN returns to the start for more uniform waits.
+
+Think about it: Which direction is the head moving, and does it reverse at the last request or at the disk edge?",
+22,DBMS201,What should I revise about SQL basics before the exam?,"Which clause runs first, WHERE or GROUP BY? What does that mean for aggregates?",
+23,DSA101,What is the key idea behind binary search trees?,"Binary search operates by repeatedly dividing the sorted array in half, thus reducing the search space by a factor of two at each step. This logarithmic reduction in space makes it efficient for large datasets, similar to how logarithms are fundamental in mathematics.",
+24,DSA101,"How do I debug recursion, please?","In recursion, a function calls itself to solve a smaller instance of the same problem. In iteration, the problem is broken down into a series of simpler steps, one after another, until a base case is reached. A base case is a case that is reached and the program can stop without further recursion. For example, in the factorial function, the base case is when the input n is less than 1, which is 1. In the factorial of 4, the function is called recursively, but because the base case has already been reached, the program stops. In the function for subsets of a list, we are calling the same function recursively for each element in the list.",
+25,DSA101,"What is the key idea behind stacks and queues, please?","The key idea behind stacks and queues is that they are not sequential but rather first-in-first-out (FIFO) and first-out (OEF), respectively, with each element moving at most once. Queues are used for enqueue operations, while stacks are used for dequeue operations. This difference in functionality allows for better performance in certain scenarios, such as for adding or removing elements, but it can also lead to issues like stack overflow or underflow for some operations.",
+26,OS202,"What should I revise about deadlocks before the exam, please?","If every thread takes locks in the same global order, can a cycle form?",
+27,DSA101,How do I implement linked lists in Python?,"The Python implementation of a singly linked list is straightforward: each node contains a value and a pointer to the next node. The function to reverse the list involves updating the next pointers. For an in-place reversal, you need to adjust the head pointer to point to the new tail, and then set the head to the new tail. Here's a simple approach:
+
+1. Initialize the head and current node",
+28,OS202,"What is the time complexity of CPU scheduling, please?","The time complexity of CPU scheduling for a round robin algorithm with a time quantum (q) of 4 and bursts {24, 3, 3} is \(O(q^2 \cdot \text{max burst})\).",
+29,DBMS201,"Give me a hint about ACID transactions, please.","From the course notes (Transactions and ACID, Practice question):
+
+Explain which ACID property write-ahead logging provides and how.
+
+Think about it: Which property is about two transactions running at the same time?",
+30,OS202,What is the time complexity of virtual memory and page replacement?,"From the course notes (Virtual memory and page replacement, Concept):
+
+Virtual memory loads pages on demand, so a process can be larger than RAM. A page fault brings a page in, evicting another by a replacement policy (FIFO, LRU, optimal). Too little memory leads to thrashing.
+
+Think about it: Track the frames in a table, one column per reference. Where are the hits?",
+31,OS202,What is a deadlocks?,Which of the four conditions is easiest to break in your example?,
+32,DSA101,"Where are heaps and priority queues used in practice, please?","After removing the root, which element moves into its place, and which way does it sift?",
+33,DBMS201,How do I implement query optimization in Python?,"Implementing query optimization in Python involves understanding the differences between various query plans and applying techniques to improve performance. Let's break down the key points:
+
+1. **Push Selections Below Joins:**
+   - **Why it works:** Indexing columns above joins helps in faster reads, but it doesn't translate well to filtering columns in joins. The presence of columns not indexed is a concern.
+   - **Example:** Imagine filtering on columns `a` and `b` in a query. While indexing `a` and `b` on the main table helps with fast reads, it might slow down joins if `a` and `b` are not indexed.
+
+2. **Indexing Every Column:**
+   - **Why it works:** Indexing every column in a table ensures faster reads. However, this can lead to higher costs for index scans compared to filtering columns down.
+   - **Example:** The query to list all employees who work in departments with at least 3 employees might not benefit from indexing all columns. Instead, filtering on columns down could be more efficient.
+
+3. **Filtering After Joins:**
+   - **Why it works:** Applying filters after joins avoids the overhead of filtering columns down. It's usually more efficient.
+   - **",
+34,DSA101,"Give me a hint about linked lists, please.","A linked list is a linear collection of nodes, where each node contains data and a reference to the next node in the sequence. The task is to reverse the order of these nodes while maintaining the original list structure.",
+35,DBMS201,What is the key idea behind the entity-relationship model?,"The key idea behind the Entity-Relationship Model (ER model) is that it represents the relationship between entities, such as students and their grades, in a way that helps in managing data and modeling complex relationships. It provides a way to represent relationships between different data objects and is widely used in database management systems.",
+36,DBMS201,"Can you explain relational keys simply, please?","Which attributes, if you know them, pin down exactly one row?",
+37,OS202,What should I revise about processes before the exam?,What information must the OS save to pause a process and resume it later?,
+38,DBMS201,"How are concurrency control different from arrays, please?","In 2PL, once a transaction releases a lock, what is it no longer allowed to do?",
+39,OS202,How do CPU scheduling work?,Draw the Gantt chart first. When does each process finish?,
+40,DBMS201,"How do joins work, please?","If the system crashes halfway through, what should the database look like afterwards?",
+41,DSA101,"When should I use stacks and queues, please?","When a new operation is needed, choose to use a queue. A queue is ideal when:
+- We need to process multiple operations one after another, like in a file system.
+- We want to maintain the order of operations and the state, like in a stack.
+- We need to keep track of a sequence of operations or tasks.
+
+For a plain array or linked list to be used as a queue, we need to:
+- Ensure O(1) operations for enqueue and dequeue.
+- Maintain the order of operations (stack) or state (queue).
+
+However, a stack is a better choice for a first-in first-out (FIFO) queue. It's less costly in terms of operations due to amortized O(1) per operation.
+
+To summarize:
+- Use a stack for a first-in first-out (FIFO) queue.
+- Use a queue for a first-in last-out (FIFO) queue.
+- For a stack, use a circular buffer or deque.
+- For a queue, use a stack or a queue with additional operations for popping from an empty stack.
+
+This guide helps the student understand how to select the appropriate data structure for a given task.",
+42,DSA101,Give me a hint about binary search trees.,"Binary search trees are designed to help find the target value in a sorted array efficiently, reducing the number of comparisons by halving the search space with each comparison. Each node maintains the left subtree with keys smaller than the node's value and the right subtree with keys larger than the node's value, allowing for logarithmic time complexity.",
+43,OS202,How do I implement CPU scheduling in Python?,What happens to short jobs stuck behind a long one in FCFS?,
+44,OS202,"How do CPU scheduling work, please?","CPU scheduling is a fundamental concept in computer science that involves choosing the best job or process to execute among a pool of jobs. In the context of round robin scheduling with q = 4 and bursts 24, 3, 3, under FCFS, if we assume that the bursts are arriving at a fixed rate, we can observe the waiting times and the average turnaround time. 
+
+Here's a brief guide on how CPU scheduling works and how we can apply it to the given scenario:
+
+- **Round Robin Scheduling (FCFS):** This is a simple and effective scheduling algorithm. It assigns jobs to the next available processor based on their arrival order. In our scenario, the bursts are arriving at a fixed rate, and we need to calculate the average waiting time and average turnaround time.
+
+- **Mixing Up Waiting Times and Turnaround Times:** In round robin scheduling, the waiting time is the time the job is in the ready queue, and the turnaround time is the completion time minus the arrival time. If we apply this principle to our scenario, we can see how the waiting time can be influenced by burst arrivals.
+
+To apply this to the given scenario, we need to know the burst arrivals and the arrival times of the jobs. Once we have this information",
+45,OS202,What is the key idea behind processes?,"The key idea behind processes is that they allow multiple units of work to run concurrently. Each process has its own execution context, unique data, and own memory space, which enables it to handle its own resources and execute tasks independently.",
+46,DSA101,How do I debug stacks and queues?,Trace the bracket string '([)]' with a stack. At which character does it go wrong?,
+47,DSA101,"Give me a hint about heaps and priority queues, please.","After removing the root, which element moves into its place, and which way does it sift?",
+48,OS202,"What is a paging, please?","From the course notes (Memory management, Practice question):
+
+Explain why paging removes external fragmentation.
+
+Think about it: What would make every free piece of memory usable by any process?",
+49,OS202,How do I implement processes in Python?,"Implementing processes in Python involves creating a new process using the `os.fork()` function and then reading its PID from the parent's process using `os.getpid()`. The child process then prints a message to stdout. Here's a simple example:
+```python
+import os
+import sys
+
+def main():
+    # fork the child process
+    pid, child_process = os.fork()
+
+    # print hi to the parent's process
+    print(""hi"", os.getpid())
+
+    # get the child's PID
+    child_pid = os.getpid()
+    print(f""child PID: {child_pid}"")
+
+if __name__ == ""__main__"":
+    main()
+```
+Explanation:
+- `os.fork()` creates a new process. The `os` module provides a `fork()` function that returns a tuple containing the PIDs of the parent and child processes.
+- The child process has the same PID as the parent, so you can print a message to the parent's process.
+- The child process reads its own PID from the parent's process, which is obtained using `os.getpid()`.
+
+Note that the first time you run this code, you'll encounter a `fork()` error because the child process will not be created yet. However,",
+50,DSA101,How do I debug linked lists?,"Debugging a linked list is like solving a puzzle. To find and correct mistakes, follow these steps:
+
+1. Start by examining your data structure to understand what is going wrong.
+2. Break down the problem into smaller, manageable sub-problems.
+3. Use tools like a debugger to identify the specific error.
+4. Apply various debugging techniques to isolate the problem.
+5. Test your solution with different inputs to see if it behaves as expected.
+6. Review your code carefully, especially when dealing with edge cases and edge cases.
+
+This approach will help you systematically approach and fix the problem with your linked list. Good luck!",
+51,DBMS201,Is my understanding of SQL basics correct?,"Your understanding of SQL basics (SELECT, FROM, WHERE, LIMIT) is generally correct. However, the student's question about finding departments with more than 5 employees is a more advanced topic that requires more context and knowledge.
+
+To help the student, here's a hint:
+The SQL query to find departments with more than 5 employees would look something like this:
+
+```sql
+SELECT department
+FROM",
+52,DSA101,What should I revise about arrays before the exam?,"Before your exam, you should focus on understanding basic array operations and the difference between accessing the last element and accessing the first element in an array. This will help you avoid simple mistakes like forgetting to subtract 1 from the index if n is 1. Once you're comfortable with these basics, you'll be able to apply them to more advanced questions.",
+53,DSA101,How do arrays work?,"Arrays are like arrays in C or C++, where each element is stored at the address of the previous element plus the current element's address. This allows for efficient access and manipulation of elements. However, they are not dynamic because elements are stored in contiguous memory locations. To create an array, a method like `a.resize(n)` is used to set the size, and an array literal or dynamic allocation",
+54,DBMS201,Where are B+ tree indexing used in practice?,"From the course notes (Indexing and B+ trees, Example):
+
+An index on emp(salary) lets WHERE salary BETWEEN 40000 AND 50000 descend the tree once and then scan the linked leaves.
+
+Think about it: How many disk pages does a lookup touch in a tree of height 3?",
+55,DSA101,How do I debug sorting?,How can you debug sorting by carefully examining the output of the merge sort algorithm and identifying any potential issues or errors in your implementation?,
+56,DSA101,"Give me a hint about graphs, BFS and DFS.","In **BFS**, nodes are processed in a level-by-level fashion. If a node is already visited, it won't be processed again. In **DFS**, nodes are processed in a depth-first manner, and when a node is processed, all its children are visited.
+
+This difference makes **BFS** suitable for applications like searching for a specific node in a tree structure, which is often implemented using **DFS**.",
+57,OS202,"What should I revise about file systems before the exam, please?",How many pointers fit in one block?,
+58,DSA101,"Where are hash tables used in practice, please?","Hash tables are widely used across various domains in academia and industry. Here are a few real-life applications:
+
+1. **Data Structure Design**: Hash tables are often used to store and retrieve data in a highly efficient manner. They can store large amounts of data without compromising performance.
+
+2. **Database Systems**: In database systems, hash tables are crucial for managing and retrieving data. They help in storing complex",
+59,DSA101,"What are common mistakes with graphs, BFS and DFS, please?","Common mistakes with BFS and DFS for graphs include: 
+- Incorrectly using queue implementation
+- Not maintaining visited set
+- Not handling cycle detection in DFS
+- Not respecting the graph structure
+- Ignoring the in-degree of nodes
+- Not checking for dead ends in BFS",
+60,DBMS201,Where are concurrency control used in practice?,"Concurrency control is used in practice across various systems and applications, particularly in distributed systems, where multiple transactions or processes need to be coordinated. It ensures that all concurrent operations are consistent, meaning that they will complete atomically without interfering with each other. This is crucial for applications like web services, messaging systems, and database applications that operate across multiple nodes.",
+61,DBMS201,What are common mistakes with query optimization?,"Why push selections below joins in a query plan? 
+
+Applying filters after joins instead of pushing selections down. Trusting stale statistics that mislead the optimizer.",
+62,DBMS201,"When should I use the entity-relationship model, please?","In the context of the entity-relationship model, a relationship attribute (like ""grade"") is typically used when you want to establish a clear, direct relationship between two entities. These entities are often related through a common attribute, but they do not have an explicit ""own"" entity that is dependent on another entity. When a student is unsure about the appropriate use of the entity-relationship model, this",
+63,DSA101,Can you explain binary search simply?,Why must the array be sorted for this to work?,
+64,OS202,Why is my threads code slow?,Why is switching between threads cheaper than switching between processes?,
+65,DSA101,"How do I implement arrays in Python, please?","Implementing Python arrays can be done using lists. Lists are more efficient than arrays due to their built-in O(1) append operation. Here’s a simple approach:
+
+```python
+def append(arr, value):
+    arr.append(value)
+```
+
+Here’s how you can use it:
+
+```python
+a = [1, 2, 3]
+append(a, 4)
+print(a)  # Output: [1, 2, 3, 4]
+```
+
+If you want to use a list for the stack, you can use the `list` constructor with a `list` type:
+
+```python
+stack = list()
+append(stack, 1)
+append(stack, 2)
+append(stack, 3)
+print(stack)  # Output: [1, 2, 3]
+```
+
+This is a good starting point, but let’s address your specific question: how do I implement arrays in Python? Here’s how:
+
+```python
+class Array:
+    def __init__(self, length):
+        self.length = length
+        self.data = [0] * length
+
+    def append(self, value):
+        for i in range(self.length - 1, -1, -1):
+            self.data[i +",
+66,DBMS201,"What is a SQL basics, please?","Which clause runs first, WHERE or GROUP BY? What does that mean for aggregates?",
+67,OS202,"How do disk scheduling work, please?","Disk scheduling in operating systems involves managing disk requests to optimize access patterns. Two common scheduling algorithms are First-In-First-Out (FIFO) and Round Robin (RR). 
+
+In the context of SCAN (Sweeping like an Elevator), if the head of the queue is at disk 0 (head move), and the requests are moving from 53 to 98, 183, 37, 122, 14, the student should understand that the head of the queue is at disk 53 (request 98) and moving towards disk 14 (request 14). The student should also understand that the head of the queue is now 53, not at disk 0 (the head of the previous step).",
+68,DSA101,What is a arrays?,"Arrays are data structures that store and manipulate multiple elements of the same type in a contiguous block of memory. In Python, you can create an array using square brackets `[]`. For example:
+
+```python
+my_array = [1, 2, 3, 4, 5]
+```
+
+arrays have the following basic operations:
+- **Accessing elements**: `array[0]`",
+69,OS202,What is the time complexity of paging?,"From the course notes (CPU scheduling, Common mistakes):
+
+Mixing up waiting time (time in the ready queue) and turnaround time (completion minus arrival). Choosing a huge quantum, which turns round robin into FCFS.
+
+Think about it: How does the size of the quantum change round robin's behaviour?",
+70,DBMS201,Give me a hint about concurrency control.,"From the course notes (Concurrency control, Practice question):
+
+Is the schedule r1(A) w2(A) w1(A) conflict serializable?
+
+Think about it: In 2PL, once a transaction releases a lock, what is it no longer allowed to do?",
+71,DBMS201,What is a query optimization?,"Query optimization is the process of selecting the best, most efficient way to perform a query, considering the current state of data and constraints.",
+72,OS202,"Where are disk scheduling used in practice, please?","In practice, disk scheduling is used in multiple systems, including:
+
+1. **Operating Systems**: In operating systems, disk scheduling is used to handle the movement of disk drives, ensuring that data transfers between disks occur in a predictable and efficient manner.
+2. **Memory Management**: In memory management systems, disk scheduling is used to optimize memory access patterns, minimizing cache misses and improving overall system performance.
+3. **File Systems**: In file systems, disk scheduling is used to manage the allocation of disk blocks to files, optimizing file access patterns and preventing conflicts.
+
+The student's question about disk scheduling in SCAN is relevant, as it touches on the efficiency and predictability of disk scheduling in an algorithm called SCAN, which is a variant of the C-SCAN algorithm. This algorithm is used in file systems and disk controllers to manage the allocation of disk blocks to files efficiently.",
+73,OS202,"Why is my disk scheduling code slow, please?","To optimize disk scheduling, you can use a technique called ""SSTF (Shortest Seek Time First)"". This scheduling method places the most important or most frequently accessed requests at the start of the disk, allowing them to be accessed quickly and efficiently. It avoids the worst-case scenario where the most important requests are delayed, which can lead to slow performance.",
+74,DBMS201,"How do I implement joins in Python, please?","To implement the joins in a Python query, you can use the `pymysql` library. First, install it with:
+
+```bash
+pip install pymysql
+```
+
+Then, here is how you can implement the joins in a Python query:
+
+```python
+import pymysql
+
+connection = pymysql.connect(host='localhost', user='root', password='password', db='student_data')
+
+cursor = connection.cursor()
+
+query = """"""
+SELECT s.name,
+       e.department
+FROM Student s
+LEFT JOIN Enrols e ON s.id = e.sid
+WHERE e.sid IS NULL;
+""""""
+
+cursor.execute(query)
+
+results = cursor.fetchall()
+
+for row in results:
+    print(f""{row[0]} is from {row[1]}"")
+
+connection.close()
+```
+
+This code connects to a MySQL database, executes the query, fetches the results, and prints them. You can replace the database connection details with your own MySQL credentials and the desired database name and table names.",
+75,DSA101,"How are binary search different from arrays, please?","From the course notes (Binary search, Concept):
+
+Binary search finds a target in a sorted array by comparing with the middle element and discarding half the range each step, so it takes O(log n) comparisons.
+
+Think about it: What are lo and hi after each step on a 2-element array? Does the loop always shrink?",
+76,DBMS201,How do the entity-relationship model work?,"Could you please provide the M:N relationship Enrols(Student, Course, grade)?",
+77,DSA101,How are sorting different from arrays?,"From the course notes (Arrays, Common mistakes):
+
+Off-by-one errors at the last index (n - 1, not n). Assuming dynamic arrays never copy: a resize copies every element, although amortised append is still O(1).
+
+Think about it: Try your idea on a 4-element array by hand. Where does the last element end up?",
+78,DSA101,Where are linked lists used in practice?,"Before you change a pointer, what would you lose if you did it first?",
+79,DSA101,"Is my understanding of arrays correct, please?","Your understanding of arrays is correct. The student might have encountered off-by-one errors in their calculations, which are typical issues when using dynamic arrays or resizing. The key takeaway is that dynamic arrays resize automatically, and any operations that require copying (e.g., `append()`) are O(1) amortized cost.
+
+To illustrate this, let's revisit a simple example. We will create a function",
+80,DSA101,What is the key idea behind stacks and queues?,"The key idea behind both stacks and queues is that they allow us to efficiently add and remove elements based on their value. Queues are designed to handle elements in non-decreasing order, while stacks are designed to handle elements in non-increasing order. The main difference is that a stack allows us to remove and add elements in any order, while a queue allows us to remove elements in ascending order, whereas a queue is a generalization of a stack that can support multiple operations in a single pass. This is where the amortized operations come into play, as the number of operations performed per element decreases with each operation performed. In this example, the student needs to find the key idea behind these data structures to implement a queue using two stacks.",
+81,OS202,Is my understanding of process synchronization correct?,"From the course notes (Process synchronization, Practice question):
+
+Solve the bounded-buffer producer-consumer problem with semaphores.
+
+Think about it: What does a semaphore's starting value represent?",
+82,DBMS201,"Give me a hint about joins, please.","In SQL queries, the LEFT JOIN operation is a useful technique when you want to represent a table with duplicate values for a primary key (e.g., ID) or a related table (e.g., Enrolments). The LEFT JOIN combines rows from the first table (Student) with rows from the second table (Enrolments) in such a way that if there are any rows in the second table that do not have a matching row in the first table, then the corresponding row from the second table is included in the result. This can be useful when you want to represent a one-to-many relationship, such as a student's enrolment history. However, there are some edge cases and limitations to keep in mind:
+
+1. **Null Values**: A NULL value in the Enrolments table might cause an error in the query plan, as it tries to join with NULL values, which is not allowed in the LEFT JOIN operation.
+
+2. **Null Values**: NULL values in the Enrolments table may result in duplicate entries in the result, especially if you are not careful with JOIN conditions.
+
+3. **Many-to-One Relationships**: JOINing a table with itself can lead to complex queries that are difficult to understand and maintain.
+
+4. **Indexes and Performance**: Index",
+83,DSA101,"What is a linked lists, please?","A linked list is a type of data structure that uses a linear sequence of nodes, each containing a value and a reference to the next node. Nodes can contain values of different types, such as integers, characters, or even other linked lists. The linked list structure allows for efficient storage, retrieval, and manipulation of data.",
+84,OS202,"What should I revise about paging before the exam, please?","What is external fragmentation? External fragmentation occurs when data is scattered across multiple free areas, rather than being organized in a contiguous block. Paging is a technique used to manage large amounts of data by breaking it down into smaller, manageable pages. What should you revise about paging before the exam?",
+85,OS202,How do disk scheduling work?,"From the course notes (Disk scheduling, Concept):
+
+Disk scheduling orders requests to reduce head movement. FCFS is fair but slow, SSTF picks the nearest request (and can starve far ones), SCAN sweeps like an elevator, and C-SCAN returns to the start for more uniform waits.
+
+Think about it: Which policy could leave a far-away request waiting forever?",
+86,DBMS201,What are common mistakes with the entity-relationship model?,"From the course notes (Entity-relationship model, Common mistakes):
+
+Putting a relationship attribute (grade) on one entity. Forgetting weak entities that depend on an owner, such as Dependent on Employee.
+
+Think about it: Can one student take many courses, and can one course have many students? What does that make the cardinality?",
+87,OS202,"What are common mistakes with paging, please?",Mistakes in paging can include using large page numbers (more than 16K) or not using a TLB. Mixed up the page number bits and offset bits can also lead to incorrect page table accesses.,
+88,OS202,What is the key idea behind deadlocks?,"The key idea behind deadlocks is that a deadlock occurs when a thread of execution is unable to continue because the execution path must stop due to a conflict with another thread or resource. In this case, the Banker's state is a cycle, and each thread must wait for the other to release a lock or a resource. This leads to an infinite loop of waiting and releasing locks, making it impossible for the thread to continue.",
+89,DSA101,"When should I use linked lists, please?","When using a singly linked list, you should primarily use it to add, remove, or update elements in a sequence. For reversing the list, where you want to return the new head of the reversed list, consider this:
+
+When should I use linked lists?
+
+1. **Add and Remove Elements:**
+   - Use a linked list for operations like adding, removing, or updating elements.
+
+2.",
+90,OS202,"What is a memory management, please?","A memory management system manages the allocation, retrieval, and deallocation of computer memory, ensuring that memory usage is efficient, consistent, and controlled. It typically involves several core functions: 
+- Memory allocation: allocating system memory for the program to use.
+- Memory retrieval: retrieving memory from the system.
+- Memory deallocation: releasing memory back to the system, usually by free() or free() with",
+91,OS202,"Is my understanding of deadlocks correct, please?","From the course notes (Deadlocks, Practice question):
+
+With Available = (3, 3, 2), decide whether a given Banker's state is safe.
+
+Think about it: If every thread takes locks in the same global order, can a cycle form?",
+92,DBMS201,"What is a ACID transactions, please?","From the course notes (Transactions and ACID, Practice question):
+
+Explain which ACID property write-ahead logging provides and how.
+
+Think about it: Why must the log reach the disk before the data page does?",
+93,DSA101,When should I use heaps and priority queues?,"From the course notes (Stacks and queues, Common mistakes):
+
+Popping from an empty stack without checking. Using a plain array as a queue and shifting on every dequeue, which makes it O(n); use a circular buffer or deque.
+
+Think about it: Trace the bracket string '([)]' with a stack. At which character does it go wrong?",
+94,DBMS201,When should I use concurrency control?,Which pairs of operations conflict? Think of the same item with at least one write.,
+95,OS202,What are common mistakes with memory management?,Is the wasted space inside an allocated block or between blocks?,
+96,DBMS201,How do I implement relational keys in Python?,What should happen to Enrols rows when a student is deleted?,
+97,DSA101,"What are common mistakes with recursion, please?","From the course notes (Recursion, Common mistakes):
+
+A missing or unreachable base case causes infinite recursion and a stack overflow. Recomputing the same subproblems (naive Fibonacci is O(2^n)); memoise them.
+
+Think about it: Draw the call tree for a small input. Do any calls repeat?",
+98,DBMS201,How do I debug B+ tree indexing?,"How can you effectively debug a B+ tree in your DBMS, especially when you encounter issues related to index behavior such as WHERE clauses descending the tree?",
+99,DBMS201,What are common mistakes with normalization?,"Common mistakes with normalization include losing the ability to express data integrity, not explicitly managing join types (BCNF), and not addressing the loss of ACID properties.",
+100,DSA101,"How are arrays different from arrays, please?",What does the index of an element tell the computer about where it lives in memory?,
+101,OS202,Is my understanding of file systems correct?,Can a single indirect block address 4 MB?,
+102,DBMS201,"What are common mistakes with joins, please?","Joining tables instead of selecting columns that are common to both tables can lead to issues. For example, if you join two tables `T1` and `T2`, you would typically select columns that exist in both tables. However, if one table includes only columns that are common between the two (`T1.T1Column1`), and the other doesn't (`T2.T2Column",
+103,DBMS201,How do I debug relational keys?,"Which attributes, if you know them, pin down exactly one row?",
+104,DBMS201,"When should I use database recovery, please?","When a transaction is in a committed state, it needs to be rolled back. However, when a transaction is in an uncommitted state, it needs to be rolled back or undone. If a transaction is in a committed state, it should be rolled back, and if it is in an uncommitted state, it should be undone. It is important to note that checkpointing limits how much of the log can be scanned, so checkpoints are used to save disk space by only scanning a portion of the log that is relevant for the current transaction.",
+105,OS202,Is my understanding of processes correct?,"Your understanding is mostly correct, but there's a small step you need to take to make it more precise. Specifically, you need to consider that each process has its own ID and that each process can only print once. Here's a more detailed explanation:
+
+1. Each fork doubles the number of processes: 1 fork → 2 processes, 2 forks → 4 processes.
+2. Each",
+106,OS202,"Why is my process synchronization code slow, please?","From the course notes (Threads, Concept):
+
+Threads are units of execution inside one process: they share code, data and open files but each has its own stack and registers. They are cheaper to create and switch than processes.
+
+Think about it: Why is switching between threads cheaper than switching between processes?",
+107,OS202,How are paging different from arrays?,Try each fit strategy on the hole list by hand. Which hole does each choose?,
+108,DBMS201,"How do normalization work, please?",Which property is about two transactions running at the same time?,
+109,DBMS201,Where are joins used in practice?,"From the course notes (Joins, Practice question):
+
+List students who are not enrolled in any course.
+
+Think about it: What does the result look like if you leave out the ON condition?",
+110,OS202,Why is my file systems code slow?,"From the course notes (File systems, Example):
+
+With 4 KB blocks and 12 direct pointers, the first 48 KB of a file need no indirect block.
+
+Think about it: Where is a file's name stored, and where is its size?",
+111,OS202,When should I use virtual memory and page replacement?,"Track the frames in a table, one column per reference. Where are the hits?",
+112,OS202,What should I revise about process synchronization before the exam?,"From the course notes (Process synchronization, Practice question):
+
+Solve the bounded-buffer producer-consumer problem with semaphores.
+
+Think about it: What does a semaphore's starting value represent?",
+113,OS202,"Is my understanding of disk scheduling correct, please?","From the course notes (Disk scheduling, Concept):
+
+Disk scheduling orders requests to reduce head movement. FCFS is fair but slow, SSTF picks the nearest request (and can starve far ones), SCAN sweeps like an elevator, and C-SCAN returns to the start for more uniform waits.
+
+Think about it: Which direction is the head moving, and does it reverse at the last request or at the disk edge?",
+114,DSA101,What is the time complexity of binary search?,Why must the array be sorted for this to work?,
+115,OS202,"How do I debug virtual memory and page replacement, please?",What happens to the CPU when processes spend all their time paging?,
+116,DBMS201,How do joins work?,"Joins in a query plan work by first determining the schema of the desired result set, then comparing tables using the common key column(s) and selecting the appropriate rows based on a specified condition.",
+117,OS202,"What is the time complexity of deadlocks, please?","Deadlocks are complex issues that often arise in concurrent systems, where the goal is to ensure that no two processes are ever in a state where they are both waiting for each other. In the context of a single-threaded system (such as a queue), the time complexity of deadlocks can be quite high, even for small enough quantum values.
+
+Deadlocks occur when the current state of processes is such",
+118,OS202,What is the time complexity of process synchronization?,"Process synchronization can be seen as a race condition. In a single-threaded environment, waiting for a lock (FCFS) can lead to a race due to the possibility that processes will see each other's locks before waiting for their own. This race can result in inconsistent waiting times and could cause the system to behave unexpectedly.",
+119,DSA101,What is the time complexity of stacks and queues?,"From the course notes (Stacks and queues, Practice question):
+
+Implement a queue using two stacks, with amortised O(1) per operation.
+
+Think about it: Trace the bracket string '([)]' with a stack. At which character does it go wrong?",
+120,DBMS201,"What is the time complexity of SQL basics, please?","The student's query revolves around retrieving a list of departments from a database where the number of employees exceeds 5. For a beginner, this type of query is straightforward and doesn't require a detailed explanation. However, a hint for an advanced student can be useful:
+
+""Explain why the SQL basics (SELECT) query would be less efficient for this task. Can you think of a more efficient way",

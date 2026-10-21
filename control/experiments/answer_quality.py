@@ -98,15 +98,40 @@ def collect(per_level: int, seed: int) -> None:
     print(f"wrote {RATINGS_DIR / 'sheet.csv'} ({len(rows)} answers, blind) and key.csv (do not open before rating)")
 
 
-def read_ratings(path: Path) -> dict[int, float]:
-    with open(path) as f:
-        return {int(r["id"]): float(r["rating"]) for r in csv.DictReader(f) if r.get("rating", "").strip()}
+def read_ratings(path: Path, skip: set[int] = frozenset()) -> dict[int, float]:
+    """id -> rating. Refuses ratings outside 1-5; unrated ids are reported and left out."""
+    with open(path, newline="", encoding="utf-8-sig") as f:  # utf-8-sig: spreadsheets may add a BOM
+        rows = list(csv.DictReader(f))
+    out, bad, missing = {}, [], []
+    for r in rows:
+        if int(r["id"]) in skip:
+            continue
+        v = (r.get("rating") or "").strip()
+        if not v:
+            missing.append(r["id"])
+            continue
+        try:
+            x = float(v)
+        except ValueError:
+            x = None
+        if x is None or not 1 <= x <= 5:
+            bad.append(f"id {r['id']}: {v!r}")
+            continue
+        out[int(r["id"])] = x
+    if bad:
+        raise SystemExit(f"{path.name}: ratings must be 1-5; fix {', '.join(bad)}")
+    if missing:
+        print(f"warning: {path.name} has {len(missing)} unrated answers (ids {', '.join(missing[:10])}); "
+              "they are left out of the score")
+    return out
 
 
-def score(raters: list[Path]) -> None:
+def score(raters: list[Path], exclude: dict[int, str] | None = None) -> None:
+    """exclude: {id: reason} for items dropped for every rater (e.g. a malformed question)."""
+    exclude = exclude or {}
     with open(RATINGS_DIR / "key.csv") as f:
         key = {int(r["id"]): int(r["level"]) for r in csv.DictReader(f)}
-    ratings = [read_ratings(p) for p in raters]
+    ratings = [{i: v for i, v in read_ratings(p, skip=set(exclude)).items()} for p in raters]
     common = sorted(set(key).intersection(*ratings))
     if not common:
         raise SystemExit("no answer rated by every rater")
@@ -121,6 +146,7 @@ def score(raters: list[Path]) -> None:
         "mean_by_level": {lv: round(sum(v) / len(v), 3) for lv, v in sorted(by_level.items())},
         "n_by_level": {lv: len(v) for lv, v in sorted(by_level.items())},
         "agreement_within_1": round(agree / len(common), 3),
+        "excluded": {str(i): why for i, why in exclude.items()},
         "note": "1-5, 'would this help a student move forward?', rated blind; mean of raters per answer",
     }
     OUT.write_text(json.dumps(result, indent=2))
@@ -137,11 +163,13 @@ def main() -> None:
     c = sub.add_parser("score", help="score the raters' sheets")
     c.add_argument("raters", nargs="*", type=Path,
                    default=[RATINGS_DIR / "rater_a.csv", RATINGS_DIR / "rater_b.csv"])
+    c.add_argument("--exclude", action="append", default=[], metavar="ID:REASON",
+                   help="drop an item for every rater, with the reason recorded (repeatable)")
     args = ap.parse_args()
     if args.cmd == "sheet":
         collect(args.per_level, args.seed)
     else:
-        score(args.raters)
+        score(args.raters, {int(e.split(":", 1)[0]): e.split(":", 1)[-1] for e in args.exclude})
 
 
 if __name__ == "__main__":

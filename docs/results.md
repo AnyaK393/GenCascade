@@ -17,7 +17,7 @@ Scenario `chaos/scenarios/comparison.yaml`: simulated exam ramp to 40 simulated 
 | Cascade depth (services failed) | 3.0 ± 0.0 | 3.0 ± 0.0 | 0.7 ± 1.4 |
 | Prediction lead time (s) | 24 ± 33 | 28 ± 50 | 16 ± 25 (n=2) |
 | Recovery time after fault (s) | – | 33 ± 71 | 0 ± 0 |
-| Learning utility retained | – | – | – |
+| Learning utility retained | 4.6 % ± 0.4 | 66.8 % ± 0.9 | 66.1 % ± 0.7 |
 
 Answer level shares (tutor requests answered, mean over runs):
 
@@ -31,7 +31,6 @@ Notes:
 - Session failure: a simulated student with at least one 5xx, connection error or response over 15 s.
 - Lead time: first LLM failure onset minus the first time the core's cascade risk crossed its threshold (0 if no alarm came first). The core predicts in every mode; only `cascadeshield` acts on it.
 - Recovery: from the end of the fault until every service's p95 is under its SLO for 20 s; missing when that never happened before the run ended.
-- Learning utility retained: pending the joint answer-quality rating (guide 7.4, `docs/answer_quality.json`).
 <!-- fedora:comparison end -->
 
 <!-- fedora:engine-versions start (written by hand from control/results/matrix/*/summary.json) -->
@@ -45,3 +44,22 @@ Each recovery rule was added because the previous version failed in a measurable
 | v2 · timed probe | 61.1 % | 68 | 16.02 | 12 % | Half-open probes at 10 % of traffic looked calm, the breaker closed, and full traffic re-broke the LLM every ~2 min. |
 | v3 · probe + demand gate | 2.4 % | 3 | 3.46 | 11 % | Stays half-open until demand falls below 80 % of the load that broke it; failed recoveries double the wait. |
 <!-- fedora:engine-versions end -->
+
+<!-- fedora:m3 start (from control/results/m3_check.json) -->
+## M3: breaker opens before the LLM breaches its SLO (real Mac, 2026-10-21)
+
+Platform: Mac, real Ollama `qwen2.5:0.5b`, `PROTECTION_MODE=cascadeshield`; control room on Fedora over the campus network. Scenario `exam_ramp` (2 simulated students for 2 min, ramp to 40 over 4 min, hold 4 min). Model `rf_v1`, predictive controller.
+
+**5 of 5 valid runs passed** (M3 needs 4 of 5).
+
+| Run | Breaker opened (s) | LLM p95 > SLO (s) | Warning (s) | Result |
+| --- | --- | --- | --- | --- |
+| 1 | 300.6 | 402.0 | 101.4 | pass |
+| 2 | 4389.4 | 4310.0 | -79.4 | excluded — Fedora suspended (lid closed) 12:00:42-13:06:47 during this run; control loop asleep. Excluded. |
+| 3 | 266.9 | never | – | pass |
+| 4 | 170.9 | never | – | pass |
+| 5 | 178.6 | never | – | pass |
+| 6 | 176.7 | never | – | pass — replacement for run 2, sleep inhibited |
+
+"never": containment kept the LLM under its SLO for the whole run.
+<!-- fedora:m3 end -->

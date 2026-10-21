@@ -26,7 +26,7 @@ SHORT = [
     "How do I debug {t}?",
     "What are common mistakes with {t}?",
     "Give me a hint about {t}.",
-    "How are {t} different from arrays?",
+    "How are {t} different from {other}?",
     "Where are {t} used in practice?",
     "How do I implement {t} in Python?",
     "What should I revise about {t} before the exam?",
@@ -55,6 +55,8 @@ def bank(course: str = "DSA101", length: str = "short") -> list[tuple[str, str]]
         return [(t, q.format(t=t)) for q, t in itertools.product(LONG, topics)]
     out = []
     for q, t in itertools.product(SHORT, topics):
-        out.append((t, q.format(t=t)))
-        out.append((t, q.format(t=t).replace("?", ", please?").replace(".", ", please.")))
+        other = topics[(topics.index(t) + 1) % len(topics)]  # a different topic of the same course
+        text = q.format(t=t, other=other)
+        out.append((t, text))
+        out.append((t, text.replace("?", ", please?").replace(".", ", please.")))
     return out

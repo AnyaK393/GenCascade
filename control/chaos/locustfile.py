@@ -172,20 +172,25 @@ def flash_burst(t: float, c: dict) -> float | None:
 
 
 SHAPES = {f.__name__: f for f in (exam_ramp, deadline_wave, steady_safe, flash_burst)}
+# CS_MANUAL=1 (make locust-ui MANUAL=1): no shape class, so the web UI's user count and spawn rate
+# are editable. Locust only sees a shape class if one exists in this module.
+MANUAL = os.environ.get("CS_MANUAL") == "1"
 
 
-class ScenarioShape(LoadTestShape):
-    """The one shape class Locust sees; the YAML's `shape` picks the curve."""
+if not MANUAL:
 
-    def tick(self):
-        # optional lead-in at light load before the shape starts (students already online)
-        t, lead_s = self.get_run_time(), SCENARIO.get("lead_s", 0)
-        if t < lead_s:
-            target = SCENARIO.get("lead_users", 1)
-        else:
-            target = SHAPES[SCENARIO["shape"]](t - lead_s, SCENARIO)
-        if target is None:
-            return None
-        users = round(target)
-        rate = max(1, abs(users - self.get_current_user_count()))
-        return users, rate
+    class ScenarioShape(LoadTestShape):
+        """The one shape class Locust sees; the YAML's `shape` picks the curve."""
+
+        def tick(self):
+            # optional lead-in at light load before the shape starts (students already online)
+            t, lead_s = self.get_run_time(), SCENARIO.get("lead_s", 0)
+            if t < lead_s:
+                target = SCENARIO.get("lead_users", 1)
+            else:
+                target = SHAPES[SCENARIO["shape"]](t - lead_s, SCENARIO)
+            if target is None:
+                return None
+            users = round(target)
+            rate = max(1, abs(users - self.get_current_user_count()))
+            return users, rate
