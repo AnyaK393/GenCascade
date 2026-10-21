@@ -1,11 +1,31 @@
-# Fedora-owned compose file, included from the root docker-compose.yml.
-# Host networking: on Linux this lets containers reach PLATFORM_HOST (localhost for the
-# mock, the Mac's IP otherwise) without port mapping. `:Z` relabels mounts for SELinux.
+# Fedora-owned compose file (profile "control"), included from the root docker-compose.yml.
+# The whole control room runs here: Prometheus, the resilience core and the dashboard. It works on
+# Fedora (two machines) and on the Mac (demo.sh --single). Containers reach the platform at
+# CS_PLATFORM_ADDR: the Mac's IP, or "compose" when the platform runs in this same compose project
+# (services by name; control.mk derives it from PLATFORM_HOST). Rootless podman cannot reach host
+# ports through host.docker.internal, so service names are the portable choice. CS_CONTROL_DIR (exported by control.mk) keeps bind
+# mounts absolute: podman-compose resolves relative paths in included files against the root.
+x-control: &control
+  profiles: ["control"]
+  image: cascadeshield-control:dev
+  pull_policy: never  # built by resilience-core below
+  extra_hosts: ["host.docker.internal:host-gateway"]
+  restart: unless-stopped
+  volumes:
+    - ${CS_CONTROL_DIR:-.}:/app/control:z
+  environment: &control-env
+    PLATFORM_HOST: ${CS_PLATFORM_ADDR:-compose}
+    CS_TOKEN: ${CS_TOKEN:-dev-token}
+    REDIS_PASSWORD: ${REDIS_PASSWORD:-dev-redis}
+    PROMETHEUS_URL: http://prometheus:9090
+    CORE_URL: http://resilience-core:8600
+
 services:
   prometheus:
     profiles: ["control"]
     image: docker.io/prom/prometheus:v3.5.0
-    network_mode: host
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["9090:9090"]
     mem_limit: 512m
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -14,11 +34,26 @@ services:
       - --web.listen-address=:9090
       - --web.enable-lifecycle
     volumes:
-      # CS_CONTROL_DIR (exported by control.mk) makes this absolute: podman-compose resolves
-      # relative paths in included files against the root, Docker Compose against this file.
-      - ${CS_CONTROL_DIR:-.}/prometheus:/etc/prometheus:ro,Z
+      - ${CS_CONTROL_DIR:-.}/prometheus:/etc/prometheus:ro,z
       - prometheus-data:/prometheus
     restart: unless-stopped
+
+  resilience-core:
+    <<: *control
+    build:
+      context: ${CS_CONTROL_DIR:-.}
+      network: host  # the bridge network is too slow for the dependency download on some hosts
+    command: ["python", "-m", "resilience_core.main"]
+    ports: ["8600:8600"]
+    mem_limit: 768m
+    depends_on: [prometheus]
+
+  dashboard:
+    <<: *control
+    command: ["python", "-m", "streamlit", "run", "dashboard/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    ports: ["8501:8501"]
+    mem_limit: 512m
+    depends_on: [resilience-core]
 
 volumes:
   prometheus-data:

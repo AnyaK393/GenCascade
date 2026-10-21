@@ -22,14 +22,19 @@ SELinux (Fedora only): the platform mounts `platform/data` into its containers. 
 ```bash
 make platform-mock-up           # the Mac's platform here: mock LLM, chaos on, MODE=none (MODE=... to change)
 make check                      # every contract metric present?
-make control-up                 # Prometheus :9090, core :8600, dashboard :8501
+make control-up                 # containers: Prometheus :9090, core :8600, dashboard :8501
 make load SCENARIO=exam_ramp    # headless Locust -> control/results/
 make control-status             # what's running + latest core state
 make control-down platform-mock-down
 ```
 
-Pointing at the real Mac: set `PLATFORM_HOST=<mac ip>` in `.env`, then `make prom-targets`
-(Prometheus picks up the new targets without a restart) and restart the core.
+Pointing at the real Mac: set `PLATFORM_HOST=<mac ip>` in `.env` (or prefix a command with
+`PLATFORM_HOST=...`), then `make control-up`. Prometheus re-reads its targets without a restart.
+The control room runs in containers (image = dependencies only; the code is bind-mounted, so edits
+need `docker compose --profile control restart resilience-core`, not a rebuild). `make core` /
+`make dashboard` run them natively for development; stop the containers first.
+The same profile runs on the Mac for `demo.sh --single`: `docker compose --profile control up -d --build`
+after `python3 control/prometheus/render_targets.py`, no virtualenv needed.
 
 ## Layout
 
@@ -114,3 +119,29 @@ acts on the LLM's cascade risk through the control API, with the reason, risk an
   so the platform's failsafe takes over), "Schedule exam in 2 minutes", reload model.
 - **Exam calendar** (`calendar.py`, `data/exam_calendar.yaml`): pre-warm 10 min before, exam mode
   at the start (floor 1 if expected students exceed `CS_CAPACITY_USERS`, default 5), off at the end.
+
+## Phase 4: evaluation and figures (M4)
+
+```bash
+make matrix                       # 3 modes x 3 runs (~2.5 h); restarts the local platform per mode
+make matrix VARIANTS=threshold,no_graph,binary_ladder RUNS=2   # ablations (guide 7.3)
+make matrix RESTART=manual        # platform on the Mac: prompts you to restart it in each mode
+make figures                      # docs/figures/*.png + .svg from the latest matrix
+make screenshot SHOT=healthy      # dashboard via headless Chrome (SHOT=contained during a ramp)
+```
+
+- **Comparison** (`experiments/run_matrix.py`, scenario `chaos/scenarios/comparison.yaml`): seeded
+  exam ramp to 40 simulated students (8x capacity), 12 min, +1.5 s LLM latency at minute 6. Modes
+  are interleaved. Per run: per-request log (Locust, `CS_REQUEST_LOG`), Prometheus export, the core's
+  risk, `cs:actions`, student commit count. `--analyze <dir>` computes session failure rate, quiz
+  submissions lost, SLO violation time, tutor p95, cascade depth, lead time, recovery time and answer
+  level shares, mean ± 95 % CI, and replaces only the marked block in `docs/results.md`.
+- **Ablations**: `threshold` (Phase 1 risk instead of ML), `no_graph` (own risk only),
+  `binary_ladder` (L0/L3 only), all in `cascadeshield` mode, via the core's operator settings.
+- **Answer quality** (`experiments/answer_quality.py`): `sheet` collects 30 answers per level L0-L3
+  into a blind `docs/ratings/sheet.csv` (use the Mac's real Ollama); both raters fill a copy;
+  `score` writes `docs/answer_quality.json`, which turns on "learning utility retained" and figure 7.
+- **Figures** (`experiments/figures.py`): 1 architecture, 2/3 dashboard screenshots, 4 prediction vs
+  reality timeline, 5 comparison (5b ablation), 6 SHAP summary, 7 ladder utility. Light theme,
+  one y-axis per panel, palette validated for colour-blind separation.
+- **Dashboard theme**: `.streamlit/config.toml`, fixed light high-contrast theme, base font 17 px.

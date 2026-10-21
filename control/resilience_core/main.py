@@ -64,6 +64,7 @@ class Ops(BaseModel):
     kill_switch: bool = False
     controller: str = os.environ.get("CS_CONTROLLER", "predictive")
     graph_enabled: bool = True
+    ladder: str = "full"  # full | binary (ablation: L0/L3 only)
 
 
 class Core:
@@ -205,10 +206,12 @@ class Core:
             self.shadow = {"level": int(requested.get("level") or 0),
                            "breaker": requested.get("breaker") or "closed"}
         self.engine.cfg.threshold = self.threshold
+        self.engine.cfg.ladder = self.ops.ladder
         decisions: list[Decision] = []
         if not self.ops.kill_switch:
             obs = Observation(now, R, self.shadow["level"], self.shadow["breaker"],
                               queue_growth_per_s=queue_growth(series),
+                              demand=(telemetry.get("gateway") or {}).get("sessions_active"),
                               admission_limit=(platform or {}).get("admission_limit"))
             decisions = self.engine.decide(obs)
             await self.act(decisions, R, factors)
@@ -307,12 +310,15 @@ class OpsUpdate(BaseModel):
     kill_switch: bool | None = None
     controller: str | None = None
     graph_enabled: bool | None = None
+    ladder: str | None = None
 
 
 @app.post("/ops/settings", dependencies=[Depends(require_token)])
 async def ops_settings(b: OpsUpdate) -> dict:
     if b.controller is not None and b.controller not in CONTROLLERS:
         raise HTTPException(422, f"controller must be one of {CONTROLLERS}")
+    if b.ladder is not None and b.ladder not in ("full", "binary"):
+        raise HTTPException(422, "ladder must be full or binary")
     changes = b.model_dump(exclude_none=True)
     before = core.ops.model_dump()
     core.ops = core.ops.model_copy(update=changes)
@@ -323,7 +329,7 @@ async def ops_settings(b: OpsUpdate) -> dict:
         # Stop advising at once: drop the heartbeat so the Mac's failsafe takes over now, not in 10 s.
         await core.actuator.stop_heartbeat()
         core.pending = None
-    if "dry_run" in changes or "controller" in changes:
+    if "dry_run" in changes or "controller" in changes or "ladder" in changes:
         core.shadow = None
         core.engine = ContainmentEngine(EngineConfig(threshold=core.threshold))
     return core.ops.model_dump()

@@ -6,3 +6,4 @@ prometheus/targets/*.json
 !prometheus/targets/.gitkeep
 data/dataset_summary.txt
 models/*.joblib
+prometheus/targets/core/*.json

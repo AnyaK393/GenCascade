@@ -103,11 +103,10 @@ wheels = [
 name = "cascadeshield-control"
 version = "0.1.0"
 source = { virtual = "." }
-default-groups = ["dev", "ml"]
+default-groups = ["dev", "load", "ml", "xgb"]
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
-    { name = "locust" },
     { name = "networkx" },
     { name = "pandas" },
     { name = "plotly" },
@@ -125,11 +124,16 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
 ]
+load = [
+    { name = "locust" },
+]
 ml = [
     { name = "joblib" },
     { name = "matplotlib" },
     { name = "scikit-learn" },
     { name = "shap" },
+]
+xgb = [
     { name = "xgboost" },
 ]
 
@@ -137,7 +141,6 @@ ml = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
-    { name = "locust", specifier = ">=2.31" },
     { name = "networkx", specifier = ">=3.3" },
     { name = "pandas", specifier = ">=2.2" },
     { name = "plotly", specifier = ">=5.24" },
@@ -155,13 +158,14 @@ dev = [
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
 ]
+load = [{ name = "locust", specifier = ">=2.31" }]
 ml = [
     { name = "joblib", specifier = ">=1.4" },
     { name = "matplotlib", specifier = ">=3.9" },
     { name = "scikit-learn", specifier = ">=1.5" },
     { name = "shap", specifier = ">=0.46" },
-    { name = "xgboost", specifier = ">=2.1" },
 ]
+xgb = [{ name = "xgboost", specifier = ">=2.1" }]
 
 [[package]]
 name = "certifi"

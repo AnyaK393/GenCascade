@@ -6,14 +6,14 @@ from resilience_core.risk import threshold_risk
 class Sim:
     """Feeds the engine one risk sample every 2 s and applies its decisions."""
 
-    def __init__(self, threshold=0.8):
-        self.e = ContainmentEngine(EngineConfig(threshold=threshold))
+    def __init__(self, threshold=0.8, ladder="full"):
+        self.e = ContainmentEngine(EngineConfig(threshold=threshold, ladder=ladder))
         self.t, self.level, self.breaker, self.log = 0.0, 0, "closed", []
 
-    def run(self, risk, seconds, **kw):
+    def run(self, risk, seconds, demand=None, **kw):
         for _ in range(int(seconds / 2)):
             self.t += 2
-            for d in self.e.decide(Observation(self.t, risk, self.level, self.breaker, **kw)):
+            for d in self.e.decide(Observation(self.t, risk, self.level, self.breaker, demand=demand, **kw)):
                 self.log.append((self.t, d.action, d.value))
                 if d.action == "set_level":
                     self.level = int(d.value)
@@ -100,3 +100,54 @@ def test_threshold_risk():
     assert threshold_risk(7.5, 10) == 0.5
     assert threshold_risk(10, 10) == 1.0
     assert threshold_risk(30, 10) == 1.0
+
+
+def test_binary_ladder_uses_only_l0_and_l3():
+    s = Sim(ladder="binary").run(0.65, 20)
+    assert s.level == 0  # no lean step
+    s.run(0.9, 6)
+    assert (s.level, s.breaker) == (3, "open")
+    s.run(0.1, 32)
+    assert (s.level, s.breaker) == (0, "half_open")
+    s.run(0.1, 32)
+    assert (s.level, s.breaker) == (0, "closed")
+    assert {int(v) for _, a, v in s.log if a == "set_level"} <= {0, 3}
+
+
+def test_timed_probe_when_risk_is_stuck_below_threshold():
+    """The first comparison's failure mode: breaker open, risk frozen at 0.66 (threshold 0.67)."""
+    s = Sim(threshold=0.67).run(0.9, 6)
+    assert (s.level, s.breaker) == (2, "open")
+    s.run(0.66, 54)
+    assert s.breaker == "open"  # before 60 s: no probe
+    s.run(0.66, 8)
+    assert (s.level, s.breaker) == (1, "half_open")
+
+
+def test_failed_probe_reopens_and_backs_off():
+    s = Sim(threshold=0.67).run(0.9, 6).run(0.66, 64)
+    assert s.breaker == "half_open"
+    s.run(0.9, 6)  # probe overloads the LLM
+    assert (s.level, s.breaker) == (2, "open") and s.e.probe_wait == 120
+    s.run(0.66, 100)
+    assert s.breaker == "open"  # backed off: no probe before 120 s
+    s.run(0.66, 24)
+    assert s.breaker == "half_open"
+
+
+def test_half_open_waits_for_demand_to_fall_before_closing():
+    """The second comparison's failure mode: 10 % probes look calm while 40 students are still online."""
+    s = Sim(threshold=0.67).run(0.9, 6, demand=20)  # breaks at 20 sessions
+    s.run(0.3, 64, demand=40)
+    assert s.breaker == "half_open"  # probe started
+    s.run(0.3, 120, demand=40)
+    assert s.breaker == "half_open"  # calm, but demand is still above the breaking load
+    s.run(0.3, 40, demand=15)
+    assert s.breaker == "closed"  # 15 <= 80 % of 20
+
+
+def test_reopening_soon_after_closing_backs_off():
+    s = Sim(threshold=0.67).run(0.9, 6).run(0.3, 64).run(0.3, 32)
+    assert s.breaker == "closed"
+    s.run(0.9, 6)  # re-broken 6 s after closing
+    assert s.breaker == "open" and s.e.probe_wait == 120

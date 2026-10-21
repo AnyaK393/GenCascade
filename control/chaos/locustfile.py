@@ -10,7 +10,9 @@ scenario's `seed`, so a run can be repeated.
 """
 
 import itertools
+import json
 import os
+import time
 import random
 import uuid
 from pathlib import Path
@@ -42,6 +44,24 @@ COURSE_CHOICES = COURSES if SCENARIO.get("course", "mixed") == "mixed" else [SCE
 QUESTIONS = {c: bank(c, SCENARIO.get("question_length", "short")) for c in COURSE_CHOICES}
 _user_ids = itertools.count()
 
+# Optional per-request log (JSON lines) for the comparison experiment: session failure rate and
+# lost quiz submissions need per-student detail that Locust's CSVs do not keep.
+_REQUEST_LOG = open(os.environ["CS_REQUEST_LOG"], "a", buffering=1) if os.environ.get("CS_REQUEST_LOG") else None
+
+
+def log_request(kind: str, student_id: str, r, **extra) -> None:
+    if _REQUEST_LOG is None:
+        return
+    try:
+        body = r.json() if r.status_code < 500 and r.content else {}
+    except ValueError:
+        body = {}
+    _REQUEST_LOG.write(json.dumps({
+        "t": time.time(), "kind": kind, "student": student_id, "status": r.status_code,
+        "latency_s": round(r.elapsed.total_seconds(), 3) if r.elapsed else None,
+        "level": body.get("level"), "source": body.get("source"),
+        "duplicate": body.get("duplicate"), **extra}) + "\n")
+
 
 def user_rng() -> random.Random:
     return random.Random(SEED * 1_000_003 + next(_user_ids))
@@ -69,6 +89,7 @@ class TutorStudent(HttpUser):
                 "course": self.course, "question": question}
         with self.client.post("/api/tutor/ask", json=body, name="/api/tutor/ask",
                               timeout=60, catch_response=True) as r:
+            log_request("tutor", self.student_id, r, course=self.course)
             if r.status_code >= 400:
                 r.failure(f"HTTP {r.status_code}")
             elif r.elapsed.total_seconds() > 15:
@@ -93,6 +114,7 @@ class QuizTaker(HttpUser):
         for attempt in range(4):  # first try + up to 3 retries with the same key
             with self.client.post("/api/quiz/submit", json=body, name="/api/quiz/submit",
                                   timeout=15, catch_response=True) as r:
+                log_request("quiz", self.student_id, r, key=key, attempt=attempt + 1)
                 if r.status_code == 202:
                     r.success()
                     return
