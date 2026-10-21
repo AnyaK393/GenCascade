@@ -45,3 +45,11 @@ Each recovery rule was added because the previous version failed in a measurable
 | v2 · timed probe | 61.1 % | 68 | 16.02 | 12 % | Half-open probes at 10 % of traffic looked calm, the breaker closed, and full traffic re-broke the LLM every ~2 min. |
 | v3 · probe + demand gate | 2.4 % | 3 | 3.46 | 11 % | Stays half-open until demand falls below 80 % of the load that broke it; failed recoveries double the wait. |
 <!-- fedora:engine-versions end -->
+
+## Mac notes (written by hand by the Mac developer; outside the generated blocks)
+
+Anomalies on the Mac during comparison runs (guide 7.2): restarts, memory pressure, apps open,
+power, Docker settings. One line per run that was not clean.
+
+| Date | Run | Note |
+| --- | --- | --- |

@@ -7,7 +7,8 @@ RUN_DIR  := .run
 export CS_CONTROL_DIR := $(CURDIR)/control
 # Address the control containers use for the platform: PLATFORM_HOST (environment, else .env);
 # a platform on this same host is in the same compose project, reached by service name ("compose").
-_PLATFORM_HOST := $(or $(PLATFORM_HOST),$(shell sed -n 's/^PLATFORM_HOST=\([^ #]*\).*/\1/p' .env 2>/dev/null))
+_HASH := \#
+_PLATFORM_HOST := $(or $(PLATFORM_HOST),$(shell sed -n 's/^PLATFORM_HOST=\([^ $(_HASH)]*\).*/\1/p' .env 2>/dev/null))
 export CS_PLATFORM_ADDR := $(if $(filter-out localhost 127.0.0.1 compose,$(_PLATFORM_HOST)),$(_PLATFORM_HOST),compose)
 
 # $(call bg,name,command): start a control process in the background, pid in control/.run

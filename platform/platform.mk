@@ -7,7 +7,7 @@ VENV_PY = platform/.venv/bin/python
 
 .PHONY: platform-build platform-up platform-down platform-restart platform-logs platform-ps \
 	platform-smoke calibrate platform-ladder platform-breaker seed-cache \
-	platform-exam fairness
+	platform-exam fairness demo demo-mock demo-single demo-prepare demo-stop
 
 platform-build: ## Build the platform image
 	$(COMPOSE) --profile platform build
@@ -46,3 +46,18 @@ platform-exam: ## Phase 3 check: pre-warm, exam floor, integrity, cache hit rate
 
 fairness: ## Share of degraded answers per course since the orchestrator started
 	@python3 platform/tools/fairness.py
+
+demo: ## Phase 4 demo start: preflight, cascadeshield on Ollama, warm-up, reset (docs/demo.md)
+	@scripts/demo.sh
+
+demo-mock: ## Demo start with the mock LLM (Ollama misbehaving)
+	@scripts/demo.sh --mock
+
+demo-single: ## Demo start with the control room on this Mac too (no network to Fedora)
+	@scripts/demo.sh --single
+
+demo-prepare: ## Build platform + control images and pull the model, so the demo needs no internet
+	@scripts/demo.sh --prepare
+
+demo-stop: ## Stop the demo (platform and control room on this Mac)
+	@scripts/demo.sh --stop
