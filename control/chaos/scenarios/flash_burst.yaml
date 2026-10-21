@@ -1,12 +1,12 @@
 # Near-instant spike: shows the honest limit of prediction (little lead time).
 shape: flash_burst
 seed: 45
-base_users: 10
-base_s: 90
-peak_users: 200
+base_users: 2
+base_s: 120
+peak_users: 60
 burst_s: 5
 hold_s: 180
 tutor_weight: 8
 quiz_weight: 2
 question_length: short
-course: DSA101
+course: mixed

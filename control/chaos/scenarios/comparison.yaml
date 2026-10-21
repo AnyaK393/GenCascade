@@ -1,0 +1,17 @@
+# Three-mode comparison (guide 7.2): seeded exam_ramp, 12 minutes, one latency fault at minute 6.
+# The guide's 300 students were sized for a faster LLM; this platform sustains ~5 users at level 0
+# (docs/calibration.md), so 40 users is 8x capacity: the same "far above capacity" regime.
+shape: exam_ramp
+seed: 7202
+lead_s: 120
+lead_users: 2
+peak_users: 40
+ramp_s: 240
+hold_s: 300
+taper_s: 60
+tutor_weight: 7
+quiz_weight: 3
+question_length: short
+course: mixed
+# read by experiments/run_matrix.py, ignored by Locust
+fault: {service: llm_inference, hook: latency, body: {extra_ms: 1500, seconds: 120}, start_s: 360}

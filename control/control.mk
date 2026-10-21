@@ -5,6 +5,10 @@ SCENARIO ?= exam_ramp
 PY       := .venv/bin/python
 RUN_DIR  := .run
 export CS_CONTROL_DIR := $(CURDIR)/control
+# Address the control containers use for the platform: PLATFORM_HOST (environment, else .env);
+# a platform on this same host is in the same compose project, reached by service name ("compose").
+_PLATFORM_HOST := $(or $(PLATFORM_HOST),$(shell sed -n 's/^PLATFORM_HOST=\([^ #]*\).*/\1/p' .env 2>/dev/null))
+export CS_PLATFORM_ADDR := $(if $(filter-out localhost 127.0.0.1 compose,$(_PLATFORM_HOST)),$(_PLATFORM_HOST),compose)
 
 # $(call bg,name,command): start a control process in the background, pid in control/.run
 define bg
@@ -18,46 +22,40 @@ define stop
 endef
 
 .PHONY: control-setup prom-targets prom-up control-up control-down platform-mock-up platform-mock-down \
-	check core dashboard mock load locust-ui test control-logs control-status
+	check core dashboard load locust-ui test control-logs control-status episodes episodes-plan dataset train m3-check matrix figures screenshot
 
 control-setup: ## Install control-room Python deps with uv
 	cd control && $(UV) sync
 
 prom-targets: ## Point Prometheus at PLATFORM_HOST (no restart needed)
-	@cd control && PYTHONPATH=. $(PY) prometheus/render_targets.py
+	@python3 control/prometheus/render_targets.py
 
-prom-up: prom-targets ## Start Prometheus (compose profile "control")
-	$(COMPOSE) --profile control up -d
+prom-up: prom-targets ## Start Prometheus only (for dataset runs, with the core stopped)
+	$(COMPOSE) --profile control up -d prometheus
 
-control-up: prom-up ## Start Prometheus, resilience core and dashboard in the background
-	$(call bg,core,$(PY) -m resilience_core.main)
-	$(call bg,dashboard,$(PY) -m streamlit run dashboard/app.py --server.headless true --server.port 8501)
+control-up: prom-targets ## Start the control room in containers: Prometheus, core, dashboard
+	$(COMPOSE) --profile control up -d --build
 	@echo "dashboard http://localhost:8501  core http://localhost:8600/state  prometheus http://localhost:9090"
 
-control-down: ## Stop the core, dashboard and Prometheus
+control-down: ## Stop the control room (containers, and any native core/dashboard started by hand)
 	$(call stop,dashboard)
 	$(call stop,core)
-	$(COMPOSE) --profile control down
+	$(COMPOSE) --profile control stop prometheus resilience-core dashboard  # not `down`: that touches the platform too
 
-platform-mock-up: ## Start the local mock platform (Redis container + 5 mock services)
-	$(COMPOSE) --profile mock up -d
-	$(call bg,mock,$(PY) -m mock_platform.run_all)
+platform-mock-up: ## Run the Mac's platform here with the mock LLM and chaos hooks (MODE=none by default)
+	$(MAKE) platform-up BACKEND=mock CHAOS=1 MODE=$(or $(MODE),none)
 
-platform-mock-down: ## Stop the mock platform
-	$(call stop,mock)
-	$(COMPOSE) --profile mock down
+platform-mock-down: ## Stop the local platform
+	$(MAKE) platform-down
 
 check: ## Check the platform exposes every contract metric
 	python3 scripts/check_contracts.py
 
-core: ## Run the resilience core in the foreground
+core: ## Run the resilience core natively in the foreground (dev; stop the container first)
 	cd control && PYTHONPATH=. $(PY) -m resilience_core.main
 
-dashboard: ## Run the dashboard in the foreground
+dashboard: ## Run the dashboard natively in the foreground (dev; stop the container first)
 	cd control && PYTHONPATH=. $(PY) -m streamlit run dashboard/app.py
-
-mock: ## Run the mock platform services in the foreground
-	cd control && PYTHONPATH=. $(PY) -m mock_platform.run_all
 
 load: ## Headless Locust run: make load SCENARIO=exam_ramp
 	@mkdir -p control/results
@@ -77,4 +75,31 @@ control-logs: ## Tail control-room logs
 control-status: ## Show what is running and the core's latest state
 	@for f in control/$(RUN_DIR)/*.pid; do [ -f $$f ] && n=$$(basename $$f .pid) && \
 		(kill -0 $$(cat $$f) 2>/dev/null && echo "up    $$n" || echo "dead  $$n"); done; true
+	@$(COMPOSE) --profile control ps --format '{{.Service}}: {{.Status}}' 2>/dev/null | grep -v '^$$' || true
 	@curl -s localhost:8600/state | python3 -c 'import json,sys; s=json.load(sys.stdin); print("core healthy:", s.get("healthy"), "| risk:", s.get("risk"), "| platform:", s.get("platform"))' 2>/dev/null || echo "core not reachable"
+
+episodes: ## Record dataset episodes: make episodes N=30 [SEED=2026] (platform in MODE=none, CHAOS=1)
+	cd control && PYTHONPATH=. $(PY) -m chaos.episode_runner --n $(or $(N),1) --seed $(or $(SEED),2026)
+
+episodes-plan: ## Print the next N episode plans without running them
+	cd control && PYTHONPATH=. $(PY) -m chaos.episode_runner --n $(or $(N),60) --seed $(or $(SEED),2026) --dry-run
+
+dataset: ## Build control/data/train.parquet from valid episodes, then plot label checks
+	cd control && PYTHONPATH=. $(PY) -m experiments.build_dataset
+	cd control && PYTHONPATH=. $(PY) -m experiments.plot_labels
+
+train: ## Train, calibrate and evaluate models; activates rf_v1 (results/model_results.md)
+	cd control && PYTHONPATH=. $(PY) -m experiments.train
+
+m3-check: ## M3: breaker opens before p95 > SLO on exam_ramp (platform cascadeshield, core live)
+	cd control && PYTHONPATH=. $(PY) -m experiments.m3_check --runs $(or $(RUNS),5) --scenario $(or $(SCENARIO),exam_ramp)
+
+matrix: ## Comparison runs: make matrix [RUNS=3] [VARIANTS=none,reactive,cascadeshield] [RESTART=local|manual]
+	cd control && PYTHONPATH=. $(PY) -m experiments.run_matrix --runs $(or $(RUNS),3) \
+		--variants $(or $(VARIANTS),none,reactive,cascadeshield) --restart $(or $(RESTART),local)
+
+figures: ## Chapter figures into docs/figures (latest matrix results)
+	cd control && PYTHONPATH=. $(PY) -m experiments.figures all
+
+screenshot: ## Dashboard screenshot via headless Chrome: make screenshot SHOT=healthy|contained
+	cd control && PYTHONPATH=. $(PY) -m experiments.figures screenshot $(or $(SHOT),healthy)

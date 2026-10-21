@@ -5,6 +5,7 @@ groups:
   - record: cs:latency_p95:15s
     expr: histogram_quantile(0.95, sum by (service, le) (rate(cs_http_request_duration_seconds_bucket[15s])))
   - record: cs:error_rate:15s
-    expr: sum by (service) (rate(cs_http_requests_total{status=~"5.."}[15s])) / sum by (service) (rate(cs_http_requests_total[15s]))
+    # "or ... * 0": a service with traffic but no 5xx yet reports 0 instead of no series at all
+    expr: (sum by (service) (rate(cs_http_requests_total{status=~"5.."}[15s])) or sum by (service) (rate(cs_http_requests_total[15s])) * 0) / sum by (service) (rate(cs_http_requests_total[15s]))
   - record: cs:rps:15s
     expr: sum by (service) (rate(cs_http_requests_total[15s]))

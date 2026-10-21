@@ -1,13 +1,15 @@
-# Two or three waves of submissions/questions, wave_gap_s apart.
+# Two or three waves of questions, wave_gap_s apart, on top of a light base load.
 shape: deadline_wave
 seed: 43
+lead_s: 90
+lead_users: 2
 waves: 3
-wave_users: 100
+wave_users: 25
 wave_rise_s: 30
 wave_hold_s: 60
 wave_gap_s: 120
-base_users: 15
+base_users: 2
 tutor_weight: 6
 quiz_weight: 4
 question_length: short
-course: DSA101
+course: mixed

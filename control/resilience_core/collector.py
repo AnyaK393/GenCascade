@@ -6,22 +6,11 @@ import math
 
 import httpx
 
+from .signals import QUALITY_SIGNALS, SIGNALS
+
 log = logging.getLogger(__name__)
 
-# snapshot key -> PromQL. Recording rules keep definitions identical for every consumer.
-QUERIES = {
-    "p95_s": "cs:latency_p95:15s",
-    "error_rate": "cs:error_rate:15s",
-    "rps": "cs:rps:15s",
-    "inflight": "cs_inflight_requests",
-    "rss_bytes": "process_resident_memory_bytes",
-    "cpu_rate": "rate(process_cpu_seconds_total[15s])",
-    "queue_depth": "cs_llm_queue_depth",
-    "tokens_per_s": "cs_llm_tokens_per_second",
-    "sessions_active": "cs_sessions_active",
-    "degradation_level": "cs_orch_degradation_level",
-    "breaker_state": "cs_orch_breaker_state",
-}
+QUERIES = {k: v for k, v in SIGNALS.items() if k not in QUALITY_SIGNALS}
 
 
 class TelemetryError(RuntimeError):
@@ -64,3 +53,27 @@ class Collector:
     async def targets_up(self) -> dict[str, bool]:
         series = await self._query('up{job="platform"}')
         return {s["metric"].get("service", "?"): s["value"][1] == "1" for s in series}
+
+    async def range_frame(self, window_s: float, step_s: int = 2):
+        """Every signal over the last window_s on the step grid, as the feature engine's long frame."""
+        import time
+
+        from .signals import to_frame
+
+        end = time.time() // step_s * step_s
+        url = self.url.replace("/query", "/query_range")
+
+        async def one(promql: str):
+            r = await self.client.get(url, params={"query": promql, "start": end - window_s, "end": end,
+                                                   "step": step_s}, timeout=1.5)
+            r.raise_for_status()
+            return r.json()["data"]["result"]
+
+        try:
+            results = await asyncio.gather(*(one(q) for q in SIGNALS.values()))
+        except (httpx.HTTPError, ValueError, KeyError) as e:
+            raise TelemetryError(str(e)) from e
+        frame = to_frame(dict(zip(SIGNALS, results)))
+        if frame.empty or "up" not in frame or frame.groupby("service")["t"].max().max() < end - 10:
+            raise TelemetryError("no recent samples from the platform")
+        return frame

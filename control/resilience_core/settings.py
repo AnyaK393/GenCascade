@@ -18,16 +18,25 @@ SERVICE_PORTS = {
     "llm_inference": 8004,
 }
 SERVICES = list(SERVICE_PORTS)
+# PLATFORM_HOST=compose: the control containers share the platform's compose project (Fedora with
+# the local platform, or the Mac's demo.sh --single) and reach each service by its compose name,
+# as named in platform/compose.yml.
+COMPOSE_NAMES = {"gateway": "gateway", "student": "student", "orchestrator": "orchestrator",
+                 "curriculum_rag": "rag", "llm_inference": "llm_inference"}
 
-# p95 latency SLOs in seconds. Placeholders until docs/calibration.md lands;
-# override with CS_SLO_<SERVICE>=<seconds>.
+# p95 latency SLOs in seconds; override with CS_SLO_<SERVICE>=<seconds>.
+# llm_inference: 3 x unloaded p95 (5.36 s) from docs/calibration.md. orchestrator and gateway
+# carry the LLM call plus their own hops, so they get 2 s of headroom over it. rag and student
+# have their own timeouts on the Mac (1 s, 0.3 s); the SLOs sit at those.
 DEFAULT_SLO_S = {
-    "gateway": 12.0,
-    "student": 0.5,
-    "orchestrator": 12.0,
+    "gateway": 18.0,
+    "student": 0.3,
+    "orchestrator": 18.0,
     "curriculum_rag": 1.0,
-    "llm_inference": 10.0,
+    "llm_inference": 16.0,
 }
+# Unloaded tokens/s per request (docs/calibration.md), the baseline for the tokens/s ratio feature.
+TOKENS_PER_S_BASELINE = float(os.environ.get("CS_TOKENS_PER_S_BASELINE", "42.1"))
 
 
 def _env(name: str, default: str) -> str:
@@ -39,7 +48,8 @@ class Settings:
     platform_host: str = _env("PLATFORM_HOST", "localhost")
     control_host: str = _env("CONTROL_HOST", "localhost")
     cs_token: str = _env("CS_TOKEN", "dev-token")
-    redis_host: str = _env("REDIS_HOST", _env("PLATFORM_HOST", "localhost"))
+    redis_host: str = _env("REDIS_HOST", "redis" if _env("PLATFORM_HOST", "localhost") == "compose"
+                           else _env("PLATFORM_HOST", "localhost"))
     redis_port: int = int(_env("REDIS_PORT", "6379"))
     redis_password: str = _env("REDIS_PASSWORD", "dev-redis")
     prometheus_url: str = _env("PROMETHEUS_URL", "http://localhost:9090")
@@ -53,7 +63,8 @@ class Settings:
     )
 
     def service_url(self, service: str) -> str:
-        return f"http://{self.platform_host}:{SERVICE_PORTS[service]}"
+        host = COMPOSE_NAMES[service] if self.platform_host == "compose" else self.platform_host
+        return f"http://{host}:{SERVICE_PORTS[service]}"
 
     @property
     def control_api(self) -> str:
