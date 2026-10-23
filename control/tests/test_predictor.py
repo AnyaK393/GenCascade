@@ -28,6 +28,7 @@ def test_live_prediction_with_factors(bundle):
     assert 0 <= llm["risk"] <= 1 and llm["threshold"] == 0.7 and llm["ttf_s"] >= 0
     assert len(llm["factors"]) == 3 and all(not f["feature"].startswith("svc_") for f in llm["factors"])
     assert all(isinstance(f["label"], str) and f["label"] for f in llm["factors"])
+    assert len({f["label"] for f in llm["factors"]}) == 3  # three distinct reasons
 
 
 def test_warming_up_until_windows_are_full(bundle):

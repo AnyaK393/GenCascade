@@ -14,10 +14,8 @@ dual axes), modes in the first three validated categorical slots, direct value l
 
 import argparse
 import json
-import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import matplotlib
@@ -200,11 +198,20 @@ COMPARE = [("session_failure_rate", "Session failure rate", 100, "%"),
            ("recovery_s", "Recovery after fault", 1, "s")]
 
 
-def fig_comparison(matrix: Path, variants=("none", "reactive", "cascadeshield"), name="5_comparison") -> None:
-    summary = json.loads((matrix / "summary.json").read_text())["summary"]
+LABEL = {"none": "none", "reactive": "reactive", "cascadeshield": "Cascade-\nShield",
+         "threshold": "threshold\nrule", "no_graph": "no\ngraph", "binary_ladder": "L0/L3\nonly"}
+
+
+def fig_comparison(matrix: Path, variants=("none", "reactive", "cascadeshield"), name="5_comparison",
+                   title="Three protection modes") -> None:
+    """Bars = mean over runs. With 3+ runs: 95 % CI error bars. With fewer, a CI from the t
+    distribution is uninformative (n=2: t=12.7), so each run is drawn as a dot instead."""
+    data = json.loads((matrix / "summary.json").read_text())
+    summary, runs = data["summary"], data["runs"]
     variants = [v for v in variants if v in summary]
-    fig, axes = plt.subplots(1, len(COMPARE), figsize=(3.0 * len(COMPARE), 3.4))
-    for ax, (key, title, scale, unit) in zip(axes, COMPARE):
+    fig, axes = plt.subplots(1, len(COMPARE), figsize=(3.0 * len(COMPARE), 3.6))
+    few_runs = False
+    for ax, (key, title_, scale, unit) in zip(axes, COMPARE):
         x = np.arange(len(variants))
         missing = []
         for i, v in enumerate(variants):
@@ -212,21 +219,29 @@ def fig_comparison(matrix: Path, variants=("none", "reactive", "cascadeshield"),
             if not ci:
                 missing.append(i)
                 continue
-            m, h, _ = ci
-            h = 0 if h is None or (isinstance(h, float) and np.isnan(h)) else h
+            m, h, n = ci
             ax.bar(i, m * scale, width=0.62, color=MODE_COLOUR[v], edgecolor=SURFACE, linewidth=2, zorder=2)
-            ax.errorbar(i, m * scale, yerr=h * scale, color=INK, capsize=4, lw=1, zorder=3)
-            ax.text(i, (m + h) * scale, f"{m * scale:.0f}" if m * scale >= 10 else f"{m * scale:.1f}",
+            vals = [r[key] * scale for r in runs if r["variant"] == v and r.get(key) is not None]
+            if n >= 3 and h is not None and not (isinstance(h, float) and np.isnan(h)):
+                ax.errorbar(i, m * scale, yerr=h * scale, color=INK, capsize=4, lw=1, zorder=3)
+                top = (m + h) * scale
+            else:
+                few_runs = True
+                ax.scatter([i + d for d in np.linspace(-0.12, 0.12, len(vals))], vals, s=22, color=INK,
+                           edgecolor=SURFACE, linewidth=1, zorder=4)
+                top = max(vals + [m * scale])
+            ax.text(i, top, f"{m * scale:.0f}" if m * scale >= 10 else f"{m * scale:.1f}",
                     ha="center", va="bottom", fontsize=9, color=INK, fontweight="bold")
         ax.set_xticks(x)
-        ax.set_xticklabels(variants, rotation=0, fontsize=8.5)
-        ax.set_title(f"{title} ({unit})", fontsize=10)
+        ax.set_xticklabels([LABEL.get(v, v) for v in variants], fontsize=8.5)
+        ax.set_title(f"{title_} ({unit})", fontsize=10)
         ax.grid(axis="x", visible=False)
         ax.set_ylim(bottom=0)
         ax.margins(y=0.18)
         for i in missing:  # e.g. recovery never happened before the run ended
             ax.text(i, ax.get_ylim()[1] * 0.04, "not\nreached", ha="center", va="bottom", fontsize=8, color=MUTED)
-    fig.suptitle("Three protection modes, mean ± 95 % CI over runs (simulated students)", x=0.01, ha="left",
+    how = "mean of 2 runs, dots = each run" if few_runs else "mean ± 95 % CI over runs"
+    fig.suptitle(f"{title}, {how} (simulated students, mock LLM)", x=0.01, ha="left",
                  fontsize=11, fontweight="bold")
     fig.tight_layout()
     save(fig, name)
@@ -302,17 +317,22 @@ def fig_ladder() -> None:
 # --- 2/3 dashboard screenshots ---------------------------------------------------------------------
 
 def screenshot(name: str, wait_s: int = 20) -> None:
-    chrome = shutil.which("google-chrome") or shutil.which("chromium") or shutil.which("chromium-browser")
-    if not chrome:
-        sys.exit("no Chrome/Chromium found; take the screenshot by hand at 1280x720")
+    """Dashboard at projector width (1280 px), 2x pixels, operator sidebar collapsed. Playwright drives the installed Chrome and
+    waits for the live panels (plain headless Chrome captures Streamlit's loading skeleton)."""
+    from playwright.sync_api import sync_playwright
+
     fname = {"healthy": "2_dashboard_healthy", "contained": "3_dashboard_contained"}[name]
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as profile:
-        subprocess.run([chrome, "--headless=new", "--disable-gpu", "--hide-scrollbars", f"--user-data-dir={profile}",
-                        "--window-size=1280,720", "--force-device-scale-factor=2", f"--virtual-time-budget={wait_s * 1000}",
-                        f"--screenshot={FIG_DIR / (fname + '.png')}", "http://localhost:8501"],
-                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=wait_s + 60)
-    print(f"wrote docs/figures/{fname}.png (check it: Streamlit may need a longer --wait)")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(channel="chrome")
+        # 1280 wide like a projector; tall enough to include the timeline below the three panels
+        page = browser.new_page(viewport={"width": 1280, "height": 1250}, device_scale_factor=2)
+        page.goto("http://localhost:8501/?view=figure", wait_until="networkidle")  # sidebar collapsed
+        page.get_by_text("SYSTEM STATUS").first.wait_for(timeout=60_000)
+        page.wait_for_timeout(wait_s * 1000)  # let the gauge, graph and timeline fill in
+        page.screenshot(path=str(FIG_DIR / f"{fname}.png"), full_page=True)
+        browser.close()
+    print(f"wrote docs/figures/{fname}.png")
 
 
 def latest_matrix() -> Path | None:
@@ -333,7 +353,7 @@ def main() -> None:
         screenshot(args.shot or "healthy", args.wait)
         return
     matrix = args.matrix or latest_matrix()
-    jobs = ["architecture", "timeline", "comparison", "shap", "ladder"] if args.what == "all" else [args.what]
+    jobs = ["architecture", "timeline", "comparison", "ablation", "shap", "ladder"] if args.what == "all" else [args.what]
     for job in jobs:
         if job == "architecture":
             fig_architecture()
@@ -348,7 +368,8 @@ def main() -> None:
         elif job == "comparison":
             fig_comparison(matrix)
         elif job == "ablation":
-            fig_comparison(matrix, ("cascadeshield", "threshold", "no_graph", "binary_ladder"), "5b_ablation")
+            fig_comparison(matrix, ("cascadeshield", "threshold", "no_graph", "binary_ladder"), "5b_ablation",
+                           "Ablation: which part matters")
 
 
 if __name__ == "__main__":

@@ -42,3 +42,12 @@ def test_validate_flags_restarts_and_gaps():
     df.loc[(df.service == "gateway") & (df.t > 150), "sample_ts"] = 150.0
     problems = validate(df, 0, 198)
     assert "student restarted" in problems and any(p.startswith("gateway scrape gap") for p in problems)
+
+
+def test_question_bank_has_no_self_comparisons():
+    from chaos.questions import COURSES, bank
+    for c in COURSES:
+        qs = [q for _, q in bank(c)]
+        assert len(qs) == 300
+        assert not any("arrays different from arrays" in q for q in qs)
+        assert c == "DSA101" or not any("different from arrays" in q for q in qs)

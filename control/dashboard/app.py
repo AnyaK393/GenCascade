@@ -20,7 +20,9 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from resilience_core.settings import settings  # noqa: E402
 
-st.set_page_config(page_title="CascadeShield", page_icon="🛡️", layout="wide")
+FIGURE_VIEW = st.query_params.get("view") == "figure"  # chapter screenshots: no operator sidebar
+st.set_page_config(page_title="CascadeShield", page_icon="🛡️", layout="wide",
+                   initial_sidebar_state="collapsed" if FIGURE_VIEW else "auto")
 
 LEVELS = {0: "L0 Full", 1: "L1 Lean", 2: "L2 Cache + RAG", 3: "L3 Static hints", 4: "L4 Shed"}
 LEVEL_MEANING = {
@@ -31,6 +33,8 @@ LEVEL_MEANING = {
     4: "Questions queued; quiz unaffected",
 }
 SERVICES = ["gateway", "student", "orchestrator", "curriculum_rag", "llm_inference"]
+SHORT = {"gateway": "gateway", "student": "student", "orchestrator": "orchestrator",
+         "curriculum_rag": "RAG", "llm_inference": "LLM"}
 HDR = {"X-CS-Token": settings.cs_token}
 
 
@@ -72,18 +76,20 @@ def graph_dot(s: dict) -> str:
     cascade, own, thr = s.get("cascade") or {}, s.get("risk") or {}, s.get("threshold", 0.8)
     blast = set((s.get("blast") or {}).get("services", []))
     breaker = (s.get("platform") or {}).get("breaker", "closed")
-    lines = ["digraph G {", "rankdir=LR; bgcolor=transparent; nodesep=0.4;",
-             'node [shape=box style="rounded,filled" fontcolor=white fontname=Helvetica fontsize=13];',
-             'edge [fontname=Helvetica fontsize=10 color="#777777" fontcolor="#777777"];']
+    lines = ["digraph G {", "rankdir=TB; bgcolor=transparent; nodesep=0.25; ranksep=0.45;",
+             'node [shape=box style="rounded,filled" fontcolor=white fontname=Helvetica fontsize=24 '
+             'margin="0.25,0.12"];',
+             'edge [fontname=Helvetica fontsize=18 color="#777777" fontcolor="#555555" penwidth=1.5];']
     for svc in SERVICES:
-        r, o = cascade.get(svc), own.get(svc)
-        label = f"{svc}\\ncascade {r:.2f}" + (f" · own {o:.2f}" if o is not None else "") if r is not None else svc
-        border = ' color="#ff1744" penwidth=4' if svc in blast else ' color="#00000000"'
+        r = cascade.get(svc)
+        name = SHORT.get(svc, svc)
+        label = f"{name}\\n{r:.2f}" if r is not None else name
+        border = ' color="#ff1744" penwidth=5' if svc in blast else ' color="#00000000"'
         lines.append(f'{svc} [label="{label}" fillcolor="{risk_colour(r, thr)}"{border}];')
     for a, b, w in s.get("edges") or []:
         attrs = f'label="{w}"'
         if (a, b) == ("orchestrator", "llm_inference") and breaker != "closed":
-            attrs = f'label="⚡ breaker {breaker}" color="#c62828" fontcolor="#c62828" style=dashed penwidth=2.5'
+            attrs = f'label=" ⚡ {breaker.replace("_", "-")}" color="#c62828" fontcolor="#c62828" style=dashed penwidth=3'
         lines.append(f"{a} -> {b} [{attrs}];")
     lines.append("}")
     return "\n".join(lines)
@@ -192,7 +198,7 @@ def live():
         st.subheader("Prediction")
         fig = go.Figure(go.Indicator(
             mode="gauge+number", value=R or 0, number={"valueformat": ".2f"},
-            title={"text": f"{contained} cascade risk"},
+            title={"text": "LLM cascade risk"},
             gauge={"axis": {"range": [0, 1]}, "bar": {"color": risk_colour(R, thr)},
                    "threshold": {"line": {"color": "black", "width": 4}, "value": thr}}))
         fig.update_layout(height=230, margin=dict(l=20, r=20, t=50, b=0))
@@ -203,18 +209,26 @@ def live():
         st.caption(f"own risk {r:.2f} · threshold {thr:.2f}" if r is not None else "warming up")
         factors = s.get("factors") or []
         if factors:
-            bar = go.Figure(go.Bar(x=[f["shap"] for f in factors][::-1], y=[f["label"] for f in factors][::-1],
-                                   orientation="h", marker_color=["#c62828" if f["shap"] > 0 else "#2e7d32"
-                                                                  for f in factors][::-1]))
-            bar.update_layout(height=170, margin=dict(l=10, r=10, t=25, b=10), title="Why (SHAP, top 3)",
-                              xaxis_title=None)
-            st.plotly_chart(bar, width="stretch")
+            st.markdown("**Why** (SHAP, top 3)")
+            biggest = max(abs(f["shap"]) for f in factors) or 1
+            for f in factors:
+                up = f["shap"] > 0
+                width = 8 + 40 * abs(f["shap"]) / biggest
+                colour = "#c62828" if up else "#2e7d32"
+                st.markdown(
+                    f"<div style='display:flex;align-items:center;gap:8px;margin:3px 0;line-height:1.25'>"
+                    f"<span style='flex:0 0 48px'><span style='display:inline-block;width:{width:.0f}px;"
+                    f"height:10px;border-radius:3px;background:{colour}'></span></span>"
+                    f"<span style='color:{colour};font-weight:700'>{'▲' if up else '▼'}</span>"
+                    f"<span>{f['label']}</span></div>", unsafe_allow_html=True)
+            st.caption("▲ pushes risk up · ▼ pulls it down")
     with col3:
         st.subheader("Containment")
-        m1, m2, m3 = st.columns(3)
+        m1, m2 = st.columns([1, 1.6])
         m1.metric("Level", LEVELS.get(lvl, "?").split(" ", 1)[0] if lvl is not None else "?")
-        m2.metric("Breaker", breaker)
-        m3.metric("Admission", platform.get("admission_limit") or "–")
+        m2.metric("Breaker", breaker.replace("_", "-"))
+        if platform.get("admission_limit"):
+            st.caption(f"Admission limit: {platform['admission_limit']} concurrent tutor requests")
         if lvl is not None:
             st.caption(f"**{LEVELS[lvl]}**: {LEVEL_MEANING[lvl]}")
         pending = s.get("pending")
@@ -233,9 +247,11 @@ def live():
             st.warning(f"Redis unreachable: {e}")
             entries = []
         rows = [{"time": datetime.fromtimestamp(float(f.get("ts", 0))).strftime("%H:%M:%S"),
-                 "actor": f.get("actor", ""), "action": f"{f.get('action', '')} → {f.get('value', '')}",
-                 "reason": f.get("reason", "")} for _, f in entries]
-        st.dataframe(rows, hide_index=True, width="stretch", height=300)
+                 "change": f"{f.get('action', '').removeprefix('set_')} → {f.get('value', '')}".replace("_", "-"),
+                 "why": f"{f.get('reason', '')} ({f.get('actor', '')})"} for _, f in entries]
+        st.dataframe(rows, hide_index=True, width="stretch", height=300,
+                     column_config={"time": st.column_config.TextColumn(width="small"),
+                                    "change": st.column_config.TextColumn(width="small")})
 
     # timeline
     h = get("/history", [])
@@ -250,10 +266,8 @@ def live():
         for x in h:
             if x["decisions"]:
                 fig.add_vline(x=datetime.fromtimestamp(x["t"]), line_color="#6a1b9a", line_width=1)
-                fig.add_annotation(x=datetime.fromtimestamp(x["t"]), y=1.15, text=" ".join(x["decisions"]),
-                                   showarrow=False, font=dict(size=9, color="#6a1b9a"), textangle=-30)
         fig.update_layout(height=280, margin=dict(l=10, r=10, t=30, b=10), yaxis=dict(range=[0, 1.3]),
-                          legend=dict(orientation="h", y=1.18), title="Last 10 minutes")
+                          legend=dict(orientation="h", y=-0.18), title="Last 10 minutes · purple lines = containment actions")
         st.plotly_chart(fig, width="stretch")
 
     upcoming = s.get("calendar") or []

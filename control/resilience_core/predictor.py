@@ -78,8 +78,10 @@ class Predictor:
             f = FEATURE_COLUMNS[i]
             if f.startswith("svc_"):
                 continue
-            out.append({"feature": f, "label": describe(f, float(row[f]), float(shap_row[i])),
-                        "value": float(row[f]), "shap": float(shap_row[i])})
+            label = describe(f, float(row[f]), float(shap_row[i]))
+            if any(o["label"] == label for o in out):
+                continue  # e.g. the 30 s and 60 s windows of one signal: show distinct reasons
+            out.append({"feature": f, "label": label, "value": float(row[f]), "shap": float(shap_row[i])})
             if len(out) == k:
                 break
         return out
