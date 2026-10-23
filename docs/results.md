@@ -48,6 +48,18 @@ Each recovery rule was added because the previous version failed in a measurable
 | v3 · probe + demand gate | 2.4 % | 3 | 3.46 | 11 % | Stays half-open until demand falls below 80 % of the load that broke it; failed recoveries double the wait. |
 <!-- fedora:engine-versions end -->
 
+## Mac notes (written by hand by the Mac developer; outside the generated blocks)
+
+Anomalies on the Mac during comparison runs (guide 7.2): restarts, memory pressure, apps open,
+power, Docker settings. One line per run that was not clean.
+
+| Date | Run | Note |
+| --- | --- | --- |
+
+Fixed after evaluation: **stale session count** (see "Known limitations"). Since 2026-10-23 the gateway
+expires idle sessions every 5 s, so `cs_sessions_active` falls to 0 about 60 s after the last request
+(measured: 3 → 0 after 65 s idle). Runs recorded before that date still have the old behaviour.
+
 <!-- fedora:m3 start (from control/results/m3_check.json) -->
 ## M3: breaker opens before the LLM breaches its SLO (real Mac, 2026-10-21)
 

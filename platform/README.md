@@ -20,7 +20,10 @@ make seed-cache LOAD=1          # reload the file after marking answers vetted: 
 make platform-exam              # Phase 3: pre-warm, exam floor, integrity, hit rate, quiz p95, banner
 make fairness                   # share of degraded answers per course
 make platform-ps / platform-logs / platform-down
+make demo                       # Phase 4: scripts/demo.sh (also demo-mock, demo-single, demo-prepare, demo-stop)
 ```
+
+Demo runbook, viva script, rehearsal log and troubleshooting: `../docs/demo.md`.
 
 Ollama (native, once):
 

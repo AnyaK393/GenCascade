@@ -125,11 +125,20 @@ async def aimd_loop() -> None:
             pass
 
 
+async def sessions_loop() -> None:
+    """Expire idle sessions even when no request arrives, so the gauge falls to 0 within 60 s of the
+    last request (contracts/metrics.md); touch_session alone left it stuck after a rush."""
+    while True:
+        await asyncio.sleep(5)
+        prune_sessions(time.time())
+
+
 @asynccontextmanager
 async def lifespan(_app):
-    task = asyncio.create_task(aimd_loop())
+    tasks = [asyncio.create_task(aimd_loop()), asyncio.create_task(sessions_loop())]
     yield
-    task.cancel()
+    for task in tasks:
+        task.cancel()
 
 
 app = create_app(lifespan=lifespan)
@@ -138,13 +147,15 @@ quiz_http = make_client(settings.quiz_timeout_s, max_connections=20)  # separate
 sessions: dict[str, float] = {}
 
 
-def touch_session(sid: str) -> None:
-    now = time.time()
-    sessions[sid] = now
-    if len(sessions) % 50 == 0 or now - min(sessions.values(), default=now) > 60:
-        for k in [k for k, t in sessions.items() if now - t > 60]:
-            del sessions[k]
+def prune_sessions(now: float) -> None:
+    for k in [k for k, t in sessions.items() if now - t > 60]:
+        del sessions[k]
     SESSIONS.set(len(sessions))
+
+
+def touch_session(sid: str) -> None:
+    sessions[sid] = time.time()
+    SESSIONS.set(len(sessions))  # sessions_loop expires the idle ones every 5 s
 
 
 async def allow(student_id: str) -> bool:

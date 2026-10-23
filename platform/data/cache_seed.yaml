@@ -4,20 +4,20 @@ DSA101:
   question: Why is accessing an array element by index O(1)?
   answer: Accessing an array element by index is O(1) because the elements are stored contiguously in
     memory with integer indices, allowing direct access by their arithmetic value.
-  vetted: false
+  vetted: true
 - topic: arrays
   question: Why is inserting at the beginning of an array slow?
   answer: The student is asking why inserting an element at the beginning of an array (which uses O(1)
     for insertion) is slow. The answer is that inserting at the beginning of an array requires shifting
     the entire array up, which is not efficient.
-  vetted: false
+  vetted: true
 - topic: arrays
   question: What is the difference between an array and a dynamic array?
   answer: The difference between an array and a dynamic array lies in their storage and allocation patterns.
     Arrays reserve storage for elements, whereas dynamic arrays use real memory. This means that in an
     array, you can only add one item per index, whereas in a dynamic array, you can add multiple items
     per index.
-  vetted: false
+  vetted: true
 - topic: arrays
   question: How do I reverse an array in place?
   answer: '**Question:** Reverse the first `k` elements, then the remaining elements, and finally reverse
@@ -25,7 +25,7 @@ DSA101:
 
 
     **HINT:** Understand the operations and apply them in an efficient manner.'
-  vetted: false
+  vetted: true
 - topic: arrays
   question: Why does my loop give an index out of range error on the last element?
   answer: Why does your loop give an index out of range error on the last element?
@@ -34,7 +34,7 @@ DSA101:
   question: When should I use a linked list instead of an array?
   answer: When you need to add a node at the end of the list, or insert a new element in a sorted order,
     the linked list is the more efficient choice.
-  vetted: false
+  vetted: true
 - topic: linked_lists
   question: How do I reverse a singly linked list?
   answer: "To reverse a singly linked list in place and return the new head, follow these steps:\n\n1.\
