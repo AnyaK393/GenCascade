@@ -55,6 +55,11 @@ power, Docker settings. One line per run that was not clean.
 
 | Date | Run | Note |
 | --- | --- | --- |
+
+Fixed after evaluation: **stale session count** (see "Known limitations"). Since 2026-10-23 the gateway
+expires idle sessions every 5 s, so `cs_sessions_active` falls to 0 about 60 s after the last request
+(measured: 3 → 0 after 65 s idle). Runs recorded before that date still have the old behaviour.
+
 <!-- fedora:m3 start (from control/results/m3_check.json) -->
 ## M3: breaker opens before the LLM breaches its SLO (real Mac, 2026-10-21)
 
