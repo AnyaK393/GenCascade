@@ -60,7 +60,7 @@ def load_chunks() -> list[Chunk]:
 
 
 index: dict = {}
-cache_vecs: dict[str, tuple[str, np.ndarray]] = {}  # cache key -> (course, tf-idf vector)
+cache_vecs: dict[str, tuple[str, np.ndarray, bool]] = {}  # cache key -> (course, tf-idf vector, vetted)
 
 
 def cache_key(course: str, question: str) -> str:
@@ -76,9 +76,9 @@ async def reload_cache_vectors() -> None:
     cache_vecs.clear()
     try:
         async for key in rds.scan_iter("cs:cache:*", count=500):
-            q, course = await rds.hmget(key, "question", "course")
+            q, course, vetted = await rds.hmget(key, "question", "course", "vetted")
             if q:
-                cache_vecs[key] = (course, vec(f"{q} {course}"))
+                cache_vecs[key] = (course, vec(f"{q} {course}"), vetted == "1")
     except Exception:
         pass  # Redis down: start with an empty cache
 
@@ -143,8 +143,10 @@ async def cache_get(b: CacheGetBody):
     t0 = time.perf_counter()
     q = vec(f"{b.question} {b.course}")
     best_key, best_sim = None, 0.0
-    for key, (course, v) in cache_vecs.items():
-        if course == b.course:
+    # vetted_only filters before choosing the best match: otherwise a closer unvetted entry hides a
+    # vetted one that is also above the threshold
+    for key, (course, v, vetted) in cache_vecs.items():
+        if course == b.course and (vetted or not b.vetted_only):
             sim = float(q @ v)
             if sim > best_sim:
                 best_key, best_sim = key, sim
@@ -157,7 +159,7 @@ async def cache_get(b: CacheGetBody):
         if not hit:
             cache_vecs.pop(best_key, None)  # expired or evicted
         elif b.vetted_only and hit.get("vetted") != "1":
-            hit = None
+            hit = None  # flag changed in Redis since the vector was stored
     RAGQ.observe(time.perf_counter() - t0)
     if not hit:
         MISSES.inc()
@@ -180,7 +182,7 @@ async def put(b: CachePutBody) -> str:
     await rds.hset(key, mapping={"question": b.question, "course": b.course, "answer": b.answer,
                                  "topic": b.topic, "vetted": "1" if b.vetted else "0"})
     await rds.expire(key, CACHE_TTL_S)
-    cache_vecs[key] = (b.course, vec(f"{b.question} {b.course}"))
+    cache_vecs[key] = (b.course, vec(f"{b.question} {b.course}"), b.vetted)
     return key
 
 
