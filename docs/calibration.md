@@ -64,3 +64,21 @@ Tuned values (first pass, to revisit in the joint load test):
 | `ADMISSION_WAIT_S` | 3 s | then the request is shed to level 4 |
 | AIMD decrease | halve on an LLM timeout, at most once per 2 s, min 1 | |
 | `LLM_TIMEOUT_S`, `MAX_QUEUE` | unchanged (20 s, 40) | |
+
+### Re-run with the vetted cache (2026-10-25, `make platform-exam`, real Ollama)
+
+All 300 seed answers vetted (150 topic FAQs plus the 5 `_common` questions per topic). The RAG
+lookup now picks the best match among vetted entries only; before, a closer unvetted entry hid a
+vetted one, which gave 22% even with the topic FAQs vetted. **11/11 checks pass.**
+
+| Measurement | Result | Target |
+| --- | --- | --- |
+| Pre-warm, 10 DSA101 topics | 0 s: all 100 answers come from the vetted seed, none generated | < 10 min |
+| Exam cache hit rate, vetted only | **80%** | > 40% |
+| Quiz submit p95 / p50 during the exam | 102 ms / 13 ms, 200/200 committed | < 500 ms |
+| Solution chunks served to the exam course | 0 of 10 probes | 0 |
+| Banner, server side | 12 ms + the page's 3 s poll | < 3 s |
+
+Run with the control room stopped: a run with a leftover control room and other apps open on the
+same Mac gave a quiz p95 of 28.7 s, from the whole Docker VM stalling, not from the quiz path.
+

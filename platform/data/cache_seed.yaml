@@ -273,6 +273,274 @@ DSA101:
     time it reaches a node, how many edges has it used? Store each node's parent so you can rebuild the
     path.
   vetted: true
+- topic: arrays
+  question: Can you explain arrays simply?
+  answer: An array is a row of equal-sized boxes placed side by side in memory, each with a number starting
+    at 0. If every box is the same size, how could you find box i without looking at the others?
+  vetted: true
+- topic: arrays
+  question: What are common mistakes with arrays?
+  answer: The usual slips are off-by-one indexing (the last index is n - 1, not n) and forgetting that
+    inserting or deleting in the middle shifts elements. When you loop, does your condition stop at i
+    < n or i <= n?
+  vetted: true
+- topic: arrays
+  question: What is the key idea behind arrays?
+  answer: Contiguous memory plus a fixed element size gives instant access by index. What does that same
+    layout cost you when you need to insert something at the front?
+  vetted: true
+- topic: arrays
+  question: Give me a hint about arrays.
+  answer: 'Write down which operations you need most: reading by position, or inserting and removing.
+    Which of those does an array make cheap, and which does it make expensive?'
+  vetted: true
+- topic: arrays
+  question: What should I revise about arrays before the exam?
+  answer: Revise the cost of access, search, insert and delete, how a dynamic array grows, and the two-pointer
+    technique. Can you explain why appending to a dynamic array is O(1) on average even though it sometimes
+    copies everything?
+  vetted: true
+- topic: linked_lists
+  question: Can you explain linked lists simply?
+  answer: A linked list is a chain of nodes where each node holds a value and a pointer to the next one.
+    Since the nodes are not next to each other in memory, how would you get to the fifth node?
+  vetted: true
+- topic: linked_lists
+  question: What are common mistakes with linked lists?
+  answer: 'Common slips: losing the rest of the list by overwriting a next pointer too early, forgetting
+    the empty-list and single-node cases, and not updating the head. Before you change a pointer, have
+    you saved what it pointed to?'
+  vetted: true
+- topic: linked_lists
+  question: What is the key idea behind linked lists?
+  answer: You trade instant indexing for cheap insertion and removal once you are at the right node. Why
+    is inserting after a node O(1) but finding that node O(n)?
+  vetted: true
+- topic: linked_lists
+  question: Give me a hint about linked lists.
+  answer: Draw the nodes as boxes and arrows and redraw them after each pointer change. Which arrow has
+    to change first so that nothing becomes unreachable?
+  vetted: true
+- topic: linked_lists
+  question: What should I revise about linked lists before the exam?
+  answer: Revise singly vs doubly linked lists, inserting and deleting at the head, middle and tail, and
+    reversing a list with three pointers. Can you trace the pointer changes for deleting a middle node
+    on paper?
+  vetted: true
+- topic: stacks_queues
+  question: Can you explain stacks and queues simply?
+  answer: 'A stack is like a pile of plates: you add and remove from the top. A queue is like a line at
+    a counter: you join at the back and leave from the front. Which one gives back the most recent item
+    first?'
+  vetted: true
+- topic: stacks_queues
+  question: What are common mistakes with stacks and queues?
+  answer: 'Typical slips: popping from an empty stack or queue, mixing up LIFO and FIFO, and using a plain
+    list''s front removal for a queue, which is slow. What should your code do when the structure is empty?'
+  vetted: true
+- topic: stacks_queues
+  question: What is the key idea behind stacks and queues?
+  answer: 'The order of removal is the whole idea: last-in-first-out vs first-in-first-out. For checking
+    balanced brackets, which order do you need, and why?'
+  vetted: true
+- topic: stacks_queues
+  question: Give me a hint about stacks and queues.
+  answer: Ask what order your problem needs things back in. If the newest item must come out first, which
+    structure fits, and what about the oldest?
+  vetted: true
+- topic: stacks_queues
+  question: What should I revise about stacks and queues before the exam?
+  answer: Revise push, pop, enqueue and dequeue costs, array vs linked implementations, circular queues,
+    and where each is used (recursion, BFS, undo). Can you explain why BFS uses a queue and DFS a stack?
+  vetted: true
+- topic: hashing
+  question: Can you explain hash tables simply?
+  answer: A hash table turns a key into an array index with a hash function, so you can jump straight
+    to where the value is stored. What has to happen when two different keys land on the same index?
+  vetted: true
+- topic: hashing
+  question: What are common mistakes with hash tables?
+  answer: 'Common slips: assuming lookups are always O(1), forgetting about collisions, and using mutable
+    keys whose hash can change. What happens to the speed if almost every key collides?'
+  vetted: true
+- topic: hashing
+  question: What is the key idea behind hash tables?
+  answer: A good hash function spreads keys evenly, and keeping the table from getting too full keeps
+    buckets short. Why does the load factor decide when the table should resize?
+  vetted: true
+- topic: hashing
+  question: Give me a hint about hash tables.
+  answer: 'Think about the worst case: what would your table look like if every key hashed to the same
+    slot? How does chaining or open addressing deal with that?'
+  vetted: true
+- topic: hashing
+  question: What should I revise about hash tables before the exam?
+  answer: Revise hash functions, chaining vs open addressing (linear and quadratic probing), load factor
+    and rehashing, and average vs worst-case costs. Can you work through inserting a few keys into a small
+    table by hand?
+  vetted: true
+- topic: recursion
+  question: Can you explain recursion simply?
+  answer: Recursion means a function solves a problem by calling itself on a smaller version of the same
+    problem. What stops it from calling itself forever?
+  vetted: true
+- topic: recursion
+  question: What are common mistakes with recursion?
+  answer: The usual slips are a missing or wrong base case, a recursive call that does not make the problem
+    smaller, and forgetting to return the result of the call. With your smallest input, does your function
+    stop?
+  vetted: true
+- topic: recursion
+  question: What is the key idea behind recursion?
+  answer: Trust that the call on the smaller input works, and only think about how to combine its answer
+    with the current step. For factorial, how does n! relate to (n - 1)!?
+  vetted: true
+- topic: recursion
+  question: Give me a hint about recursion.
+  answer: 'Write the base case first, then ask: if someone handed you the answer for a slightly smaller
+    input, what one step would finish the job?'
+  vetted: true
+- topic: recursion
+  question: What should I revise about recursion before the exam?
+  answer: Revise base and recursive cases, the call stack, tracing small inputs, recurrence relations
+    for running time, and when recursion recomputes the same work. Can you draw the call tree for fib(5)
+    and spot the repeated calls?
+  vetted: true
+- topic: sorting
+  question: Can you explain sorting simply?
+  answer: 'Sorting puts items in order, and different algorithms do it with different strategies: swapping
+    neighbours, inserting into a sorted part, or splitting and merging. Which strategy does merge sort
+    use?'
+  vetted: true
+- topic: sorting
+  question: What are common mistakes with sorting?
+  answer: 'Common slips: mixing up best, average and worst cases, forgetting quicksort''s worst case on
+    sorted input with a bad pivot, and ignoring stability. Does your algorithm keep equal items in their
+    original order?'
+  vetted: true
+- topic: sorting
+  question: What is the key idea behind sorting?
+  answer: Divide-and-conquer sorts reach O(n log n) by splitting the work into halves. Why do comparison
+    sorts cost at least about n log n comparisons in the worst case?
+  vetted: true
+- topic: sorting
+  question: Give me a hint about sorting.
+  answer: 'Pick a tiny list like 5, 2, 4, 1 and run the algorithm by hand, writing the list after each
+    step. Where does the work actually happen in your algorithm: in the splitting or in the combining?'
+  vetted: true
+- topic: sorting
+  question: What should I revise about sorting before the exam?
+  answer: 'Revise bubble, insertion, selection, merge, quick and heap sort: their time and space costs,
+    which are stable and which are in place, and quicksort''s pivot choice. Can you say which one you
+    would use for an almost-sorted list, and why?'
+  vetted: true
+- topic: binary_search
+  question: Can you explain binary search simply?
+  answer: Binary search finds a value in a sorted list by checking the middle and throwing away the half
+    that cannot contain it. How many steps does it take to shrink a list of 1,000 items down to one?
+  vetted: true
+- topic: binary_search
+  question: What are common mistakes with binary search?
+  answer: The usual slips are off-by-one errors in the bounds, a loop that never ends when low and high
+    get close, and using it on unsorted data. When low equals high, should your loop run once more?
+  vetted: true
+- topic: binary_search
+  question: What is the key idea behind binary search?
+  answer: Each comparison halves the search space, so the cost grows with log n. What property of the
+    data makes it safe to discard half of it?
+  vetted: true
+- topic: binary_search
+  question: Give me a hint about binary search.
+  answer: Track low, mid and high in a small table for a short sorted list. After each comparison, which
+    bound moves, and does mid ever get checked twice?
+  vetted: true
+- topic: binary_search
+  question: What should I revise about binary search before the exam?
+  answer: Revise the loop invariant, inclusive vs exclusive bounds, finding the first or last occurrence,
+    and searching on an answer range. Can you write the loop condition and both bound updates without
+    looking them up?
+  vetted: true
+- topic: bst
+  question: Can you explain binary search trees simply?
+  answer: A binary search tree keeps smaller keys in the left subtree and larger keys in the right subtree
+    of every node. Following that rule, which way do you go to find the smallest key?
+  vetted: true
+- topic: bst
+  question: What are common mistakes with binary search trees?
+  answer: 'Common slips: checking the ordering only against the parent instead of the whole subtree, mishandling
+    deletion of a node with two children, and assuming operations are always O(log n). What happens to
+    the tree''s height if you insert keys in sorted order?'
+  vetted: true
+- topic: bst
+  question: What is the key idea behind binary search trees?
+  answer: The ordering rule lets every comparison skip a whole subtree, so the cost depends on the height.
+    Why does a balanced tree keep searches near log n steps?
+  vetted: true
+- topic: bst
+  question: Give me a hint about binary search trees.
+  answer: Draw the tree after each insertion for a few keys. For deleting a node with two children, which
+    node could take its place without breaking the ordering rule?
+  vetted: true
+- topic: bst
+  question: What should I revise about binary search trees before the exam?
+  answer: Revise search, insert and the three deletion cases, inorder traversal giving sorted order, and
+    why balance matters (AVL or red-black trees). Can you explain why inorder traversal of a BST prints
+    the keys in order?
+  vetted: true
+- topic: heaps
+  question: Can you explain heaps and priority queues simply?
+  answer: A heap is a complete binary tree where every parent is smaller than its children (in a min-heap),
+    so the smallest item is always at the root. Where would you look for the minimum, and how long does
+    it take?
+  vetted: true
+- topic: heaps
+  question: What are common mistakes with heaps and priority queues?
+  answer: 'The usual slips: thinking a heap is fully sorted, getting the array index formulas for parent
+    and children wrong, and sifting in the wrong direction after an insert or removal. After inserting
+    at the bottom, which way does the new item move?'
+  vetted: true
+- topic: heaps
+  question: What is the key idea behind heaps and priority queues?
+  answer: The heap only promises order between parents and children, which is just enough to give the
+    minimum in O(1) and update in O(log n). Why is that cheaper than keeping the whole list sorted?
+  vetted: true
+- topic: heaps
+  question: Give me a hint about heaps and priority queues.
+  answer: Store the heap in an array and write the index of each node's children. If a node is at index
+    i, where are its children and its parent?
+  vetted: true
+- topic: heaps
+  question: What should I revise about heaps and priority queues before the exam?
+  answer: Revise the heap property, sift-up and sift-down, building a heap in O(n), heap sort, and priority
+    queues in algorithms like Dijkstra's. Can you trace removing the minimum from a small heap step by
+    step?
+  vetted: true
+- topic: graphs
+  question: 'Can you explain graphs: bfs and dfs simply?'
+  answer: A graph is a set of nodes joined by edges. BFS explores level by level, closest nodes first,
+    while DFS goes as deep as it can before backing up. Which of the two finds the fewest-edges path in
+    an unweighted graph?
+  vetted: true
+- topic: graphs
+  question: 'What are common mistakes with graphs: bfs and dfs?'
+  answer: 'Common slips: forgetting to mark nodes as visited, which causes loops on cycles, marking them
+    too late in BFS, and mixing up the stack and the queue. Where in your code do you mark a node as visited?'
+  vetted: true
+- topic: graphs
+  question: 'What is the key idea behind graphs: bfs and dfs?'
+  answer: BFS and DFS differ only in the order they take the next node to explore. What data structure
+    gives BFS its level-by-level order?
+  vetted: true
+- topic: graphs
+  question: 'Give me a hint about graphs: bfs and dfs.'
+  answer: Draw a small graph and write the queue or stack contents after each step. When does a node get
+    added, and when does it get removed?
+  vetted: true
+- topic: graphs
+  question: 'What should I revise about graphs: bfs and dfs before the exam?'
+  answer: Revise adjacency lists vs matrices, BFS and DFS with their O(V + E) cost, shortest paths in
+    unweighted graphs, cycle detection and topological sort. Can you run BFS by hand on a six-node graph?
+  vetted: true
 DBMS201:
 - topic: er_model
   question: What is the difference between an entity and an attribute?
@@ -547,6 +815,273 @@ DBMS201:
   answer: With deferred update, changes are written to the database only after commit, so recovery never
     needs undo. With immediate update, changes can reach the database before commit. Which one then needs
     both undo and redo?
+  vetted: true
+- topic: er_model
+  question: Can you explain entity-relationship model simply?
+  answer: The ER model describes data as entities (things like Student or Course), attributes (their properties)
+    and relationships between them. If a student enrolls in a course, which part of the model is 'enrolls'?
+  vetted: true
+- topic: er_model
+  question: What are common mistakes with entity-relationship model?
+  answer: 'Common slips: making something an entity when it should be an attribute, getting cardinality
+    the wrong way round, and forgetting weak entities that depend on another entity. Can a student take
+    many courses, and can a course have many students?'
+  vetted: true
+- topic: er_model
+  question: What is the key idea behind entity-relationship model?
+  answer: An ER diagram is a plan of what the data means before you build tables. How does a relationship's
+    cardinality decide whether you need a separate table for it?
+  vetted: true
+- topic: er_model
+  question: Give me a hint about entity-relationship model.
+  answer: Read the problem statement and underline the nouns and verbs. Which nouns become entities, which
+    become attributes, and which verbs become relationships?
+  vetted: true
+- topic: er_model
+  question: What should I revise about entity-relationship model before the exam?
+  answer: Revise entities and attributes (including multivalued and derived ones), keys, weak entities,
+    cardinality and participation, and mapping an ER diagram to tables. Can you turn a many-to-many relationship
+    into tables?
+  vetted: true
+- topic: relational_model
+  question: Can you explain relational model and keys simply?
+  answer: The relational model stores data in tables of rows and columns, where each row is identified
+    by a key. If two students share a name, what lets you tell their rows apart?
+  vetted: true
+- topic: relational_model
+  question: What are common mistakes with relational model and keys?
+  answer: 'Common slips: confusing candidate, primary and super keys, allowing NULL in a primary key,
+    and foreign keys that point to rows that do not exist. What should happen when you delete a row another
+    table still refers to?'
+  vetted: true
+- topic: relational_model
+  question: What is the key idea behind relational model and keys?
+  answer: Keys give every row an identity, and foreign keys link tables without copying data. Why is it
+    better to store a course id in the enrollment table than the full course details?
+  vetted: true
+- topic: relational_model
+  question: Give me a hint about relational model and keys.
+  answer: List the columns of your table and ask which smallest set of them is always unique. Is that
+    set a candidate key, and is any column in it unnecessary?
+  vetted: true
+- topic: relational_model
+  question: What should I revise about relational model and keys before the exam?
+  answer: Revise relations, tuples and attributes, super, candidate, primary and foreign keys, integrity
+    constraints, and relational algebra (select, project, join). Can you find all candidate keys of a
+    small table?
+  vetted: true
+- topic: sql_basics
+  question: Can you explain sql basics simply?
+  answer: SQL lets you ask a database questions. SELECT picks columns, FROM names the table, WHERE filters
+    rows and ORDER BY sorts them. Which clause would you use to keep only the students from one course?
+  vetted: true
+- topic: sql_basics
+  question: What are common mistakes with sql basics?
+  answer: 'Common slips: using WHERE on aggregated values instead of HAVING, selecting columns that are
+    not in the GROUP BY, and comparing with = NULL instead of IS NULL. When you filter on COUNT(*), which
+    clause does it belong in?'
+  vetted: true
+- topic: sql_basics
+  question: What is the key idea behind sql basics?
+  answer: 'SQL is declarative: you describe what result you want, not how to get it. In what order does
+    the database logically apply FROM, WHERE, GROUP BY, HAVING and SELECT?'
+  vetted: true
+- topic: sql_basics
+  question: Give me a hint about sql basics.
+  answer: Build the query one clause at a time and run it after each step. Does the row count after WHERE
+    match what you expect before you add GROUP BY?
+  vetted: true
+- topic: sql_basics
+  question: What should I revise about sql basics before the exam?
+  answer: Revise SELECT, WHERE, GROUP BY, HAVING, ORDER BY, aggregate functions, NULL handling, subqueries
+    and INSERT, UPDATE and DELETE. Can you explain the difference between WHERE and HAVING with an example?
+  vetted: true
+- topic: joins
+  question: Can you explain joins simply?
+  answer: A join combines rows from two tables that match on a column, such as enrollments and students
+    matching on student id. If a student has no enrollments, should they appear in the result?
+  vetted: true
+- topic: joins
+  question: What are common mistakes with joins?
+  answer: 'Common slips: forgetting the join condition, which multiplies every row with every other row,
+    mixing up left and right joins, and filtering an outer join in WHERE so it becomes an inner join.
+    How many rows would you get without the ON condition?'
+  vetted: true
+- topic: joins
+  question: What is the key idea behind joins?
+  answer: Inner joins keep only matches, while outer joins also keep unmatched rows from one side, filled
+    with NULLs. Which join answers 'list every student, even those with no course'?
+  vetted: true
+- topic: joins
+  question: Give me a hint about joins.
+  answer: Sketch two tiny tables with three rows each and write the result of the join by hand. Which
+    rows have no partner, and which join type keeps them?
+  vetted: true
+- topic: joins
+  question: What should I revise about joins before the exam?
+  answer: Revise inner, left, right and full outer joins, self-joins, natural join and the cross product,
+    and how joins relate to relational algebra. Can you write a query to find students who are not enrolled
+    in anything?
+  vetted: true
+- topic: normalization
+  question: Can you explain normalization simply?
+  answer: Normalization splits tables so that each fact is stored in one place, which avoids update, insert
+    and delete anomalies. If a teacher's phone number is stored in every course row, what goes wrong when
+    it changes?
+  vetted: true
+- topic: normalization
+  question: What are common mistakes with normalization?
+  answer: 'Common slips: confusing partial and transitive dependencies, decomposing in a way that loses
+    information, and getting the candidate keys wrong before starting. Have you found every candidate
+    key first?'
+  vetted: true
+- topic: normalization
+  question: What is the key idea behind normalization?
+  answer: Each normal form removes one kind of bad functional dependency. For 2NF, what kind of dependency
+    on part of the key are you trying to remove?
+  vetted: true
+- topic: normalization
+  question: Give me a hint about normalization.
+  answer: Write down the functional dependencies first, then check each one against the definition of
+    the normal form. Is the left side of every dependency a superkey?
+  vetted: true
+- topic: normalization
+  question: What should I revise about normalization before the exam?
+  answer: Revise functional dependencies, closures, 1NF, 2NF, 3NF and BCNF, lossless and dependency-preserving
+    decomposition. Can you take a small table to 3NF and check that the decomposition is lossless?
+  vetted: true
+- topic: indexing
+  question: Can you explain indexing and b+ trees simply?
+  answer: 'An index is like the index at the back of a book: it lets the database find rows without reading
+    the whole table. A B+ tree index keeps keys sorted in a short, wide tree. Why does a wide tree mean
+    fewer disk reads?'
+  vetted: true
+- topic: indexing
+  question: What are common mistakes with indexing and b+ trees?
+  answer: 'Common slips: indexing every column, which slows down writes, expecting an index to help with
+    low-selectivity columns, and forgetting that leaf nodes in a B+ tree are linked. Which queries does
+    an index actually speed up?'
+  vetted: true
+- topic: indexing
+  question: What is the key idea behind indexing and b+ trees?
+  answer: A B+ tree keeps all data pointers in the leaves and links them, so range queries are fast once
+    you find the start. How does that help with WHERE age BETWEEN 18 AND 21?
+  vetted: true
+- topic: indexing
+  question: Give me a hint about indexing and b+ trees.
+  answer: Think about how many keys fit in one disk block and how tall the tree becomes for a million
+    rows. How many disk reads does one lookup need?
+  vetted: true
+- topic: indexing
+  question: What should I revise about indexing and b+ trees before the exam?
+  answer: Revise primary vs secondary and clustered vs unclustered indexes, B+ tree search, insertion
+    and node splits, and hash indexes vs B+ trees. Can you insert a few keys into a small B+ tree and
+    show a split?
+  vetted: true
+- topic: transactions
+  question: Can you explain transactions and acid simply?
+  answer: A transaction is a group of operations that should happen all together or not at all, like moving
+    money between two accounts. What should the database do if it crashes halfway through?
+  vetted: true
+- topic: transactions
+  question: What are common mistakes with transactions and acid?
+  answer: 'Common slips: mixing up the four ACID properties, assuming consistency is guaranteed by the
+    database alone, and forgetting that isolation levels allow some anomalies. Which ACID property makes
+    a committed change survive a crash?'
+  vetted: true
+- topic: transactions
+  question: What is the key idea behind transactions and acid?
+  answer: 'ACID is the promise: atomicity, consistency, isolation and durability. Which of them is about
+    transactions not seeing each other''s half-finished work?'
+  vetted: true
+- topic: transactions
+  question: Give me a hint about transactions and acid.
+  answer: Take the bank transfer example and ask, for each ACID property, what would go wrong without
+    it. Which failure would leave money missing?
+  vetted: true
+- topic: transactions
+  question: What should I revise about transactions and acid before the exam?
+  answer: Revise the ACID properties, transaction states, commit and rollback, schedules, serializability
+    and isolation levels. Can you give an example of a dirty read?
+  vetted: true
+- topic: concurrency_control
+  question: Can you explain concurrency control simply?
+  answer: Concurrency control lets many transactions run at once without corrupting the data, using locks
+    or timestamps. If two people book the last seat at the same time, what has to stop both from succeeding?
+  vetted: true
+- topic: concurrency_control
+  question: What are common mistakes with concurrency control?
+  answer: 'Common slips: thinking two-phase locking prevents deadlock (it does not), mixing up shared
+    and exclusive locks, and confusing conflict and view serializability. Can two transactions both hold
+    a shared lock on the same item?'
+  vetted: true
+- topic: concurrency_control
+  question: What is the key idea behind concurrency control?
+  answer: The goal is a result equal to running the transactions one after another. How does a precedence
+    graph tell you whether a schedule is conflict serializable?
+  vetted: true
+- topic: concurrency_control
+  question: Give me a hint about concurrency control.
+  answer: 'Draw the precedence graph for your schedule: one node per transaction, an edge for each conflicting
+    pair of operations. Is there a cycle?'
+  vetted: true
+- topic: concurrency_control
+  question: What should I revise about concurrency control before the exam?
+  answer: Revise lost update, dirty read and unrepeatable read, shared and exclusive locks, two-phase
+    locking and strict 2PL, timestamp ordering and deadlock handling. Can you check whether a given schedule
+    is conflict serializable?
+  vetted: true
+- topic: query_processing
+  question: Can you explain query processing and optimization simply?
+  answer: When you send a query, the database parses it, considers several ways to run it, estimates the
+    cost of each and picks the cheapest. Why might two plans for the same query differ a lot in speed?
+  vetted: true
+- topic: query_processing
+  question: What are common mistakes with query processing and optimization?
+  answer: 'Common slips: ignoring the cost of reading from disk, applying selections late instead of early,
+    and assuming join order does not matter. Would you rather filter a table before or after joining it?'
+  vetted: true
+- topic: query_processing
+  question: What is the key idea behind query processing and optimization?
+  answer: Optimization rewrites the query into an equivalent but cheaper plan, using rules like pushing
+    selections down. Why does shrinking the inputs early make the joins cheaper?
+  vetted: true
+- topic: query_processing
+  question: Give me a hint about query processing and optimization.
+  answer: Draw the query as a tree of operations and ask which operations cut the most rows. Can you move
+    them closer to the tables?
+  vetted: true
+- topic: query_processing
+  question: What should I revise about query processing and optimization before the exam?
+  answer: Revise query trees, equivalence rules, selection pushdown, join algorithms (nested loop, sort-merge,
+    hash) and cost estimation. Can you compare the cost of a nested loop join and a hash join for two
+    tables?
+  vetted: true
+- topic: recovery
+  question: Can you explain recovery simply?
+  answer: Recovery brings the database back to a correct state after a crash, using a log of every change.
+    If a transaction committed just before the crash, how can its changes still be there afterwards?
+  vetted: true
+- topic: recovery
+  question: What are common mistakes with recovery?
+  answer: 'Common slips: mixing up undo and redo, forgetting that the log must be written before the data
+    (write-ahead logging), and misreading what a checkpoint saves. Which transactions need redo and which
+    need undo after a crash?'
+  vetted: true
+- topic: recovery
+  question: What is the key idea behind recovery?
+  answer: The log records enough to redo committed work and undo uncommitted work. Why must the log record
+    reach disk before the changed data page does?
+  vetted: true
+- topic: recovery
+  question: Give me a hint about recovery.
+  answer: Take a small log with a checkpoint and a crash, and list each transaction as committed or not
+    at the crash. Which ones does recovery redo, and which ones does it undo?
+  vetted: true
+- topic: recovery
+  question: What should I revise about recovery before the exam?
+  answer: Revise log records, write-ahead logging, deferred vs immediate update, checkpoints, and the
+    redo and undo phases (and ARIES if covered). Can you run recovery by hand on a short log?
   vetted: true
 OS202:
 - topic: processes
@@ -824,4 +1359,280 @@ OS202:
   answer: Write down the order the head visits the cylinders, then add up the absolute differences between
     consecutive positions. For SCAN, remember to include the trip to the end of the disk if the algorithm
     goes there.
+  vetted: true
+- topic: processes
+  question: Can you explain processes simply?
+  answer: A process is a running program together with its memory, open files and CPU state. If two copies
+    of the same program are running, are they one process or two?
+  vetted: true
+- topic: processes
+  question: What are common mistakes with processes?
+  answer: 'Common slips: confusing a program with a process, mixing up the process states, and forgetting
+    what fork() returns in the parent and in the child. After fork(), how does each copy know which one
+    it is?'
+  vetted: true
+- topic: processes
+  question: What is the key idea behind processes?
+  answer: The operating system keeps a process control block for each process so it can stop and resume
+    it. What has to be saved when the CPU switches from one process to another?
+  vetted: true
+- topic: processes
+  question: Give me a hint about processes.
+  answer: Draw the process state diagram and label each arrow with the event that causes it. What moves
+    a process from running to waiting?
+  vetted: true
+- topic: processes
+  question: What should I revise about processes before the exam?
+  answer: Revise process states and transitions, the PCB, context switching, fork, exec and wait, zombie
+    and orphan processes, and interprocess communication. Can you predict the output of a short program
+    that calls fork() twice?
+  vetted: true
+- topic: threads
+  question: Can you explain threads simply?
+  answer: A thread is a separate path of execution inside a process. Threads of the same process share
+    memory but each has its own stack and registers. Why is creating a thread cheaper than creating a
+    process?
+  vetted: true
+- topic: threads
+  question: What are common mistakes with threads?
+  answer: 'Common slips: thinking threads have separate memory, forgetting that shared data needs synchronization,
+    and mixing up user-level and kernel-level threads. If one user-level thread blocks on I/O, what happens
+    to the others?'
+  vetted: true
+- topic: threads
+  question: What is the key idea behind threads?
+  answer: Threads let one program do several things at once while sharing the same data. What do you gain
+    from sharing memory, and what new risk does it bring?
+  vetted: true
+- topic: threads
+  question: Give me a hint about threads.
+  answer: List what threads share (code, data, open files) and what each keeps for itself (stack, registers).
+    Which of these is where a race condition can happen?
+  vetted: true
+- topic: threads
+  question: What should I revise about threads before the exam?
+  answer: Revise threads vs processes, user and kernel threads, the many-to-one, one-to-one and many-to-many
+    models, and the benefits and risks of multithreading. Can you explain why a race condition needs shared
+    data?
+  vetted: true
+- topic: cpu_scheduling
+  question: Can you explain cpu scheduling simply?
+  answer: CPU scheduling decides which ready process runs next. Different policies, like first come first
+    served, shortest job first or round robin, give different waiting times. Which one gives every process
+    a turn in fixed time slices?
+  vetted: true
+- topic: cpu_scheduling
+  question: What are common mistakes with cpu scheduling?
+  answer: 'Common slips: miscounting waiting time vs turnaround time, forgetting arrival times in Gantt
+    charts, and mixing up preemptive and non-preemptive versions. Does waiting time include the time the
+    process is actually running?'
+  vetted: true
+- topic: cpu_scheduling
+  question: What is the key idea behind cpu scheduling?
+  answer: Each policy trades off average waiting time, response time and fairness. Why does shortest job
+    first minimise average waiting time, and what is the catch?
+  vetted: true
+- topic: cpu_scheduling
+  question: Give me a hint about cpu scheduling.
+  answer: Draw the Gantt chart step by step, writing the ready queue at each time a process arrives or
+    finishes. Which process is ready when the CPU frees up?
+  vetted: true
+- topic: cpu_scheduling
+  question: What should I revise about cpu scheduling before the exam?
+  answer: Revise FCFS, SJF, SRTF, priority and round robin scheduling, the formulas for waiting and turnaround
+    time, starvation and aging, and the effect of the time quantum. Can you solve a round robin problem
+    with arrival times?
+  vetted: true
+- topic: synchronization
+  question: Can you explain process synchronization simply?
+  answer: Synchronization stops threads or processes from stepping on each other when they use shared
+    data. The part of the code that touches shared data is the critical section. What must be true about
+    how many processes are inside it at once?
+  vetted: true
+- topic: synchronization
+  question: What are common mistakes with process synchronization?
+  answer: 'Common slips: forgetting to release a lock, calling wait and signal in the wrong order, and
+    solutions that guarantee mutual exclusion but not progress. Does your solution let a process in when
+    nobody else wants the critical section?'
+  vetted: true
+- topic: synchronization
+  question: What is the key idea behind process synchronization?
+  answer: A correct solution needs mutual exclusion, progress and bounded waiting. Which of those does
+    a solution that strictly alternates turns break?
+  vetted: true
+- topic: synchronization
+  question: Give me a hint about process synchronization.
+  answer: Trace two processes step by step, switching between them at the worst possible moment. Can you
+    find an interleaving where both enter the critical section?
+  vetted: true
+- topic: synchronization
+  question: What should I revise about process synchronization before the exam?
+  answer: Revise race conditions, the critical section requirements, Peterson's solution, mutexes and
+    semaphores, and the producer-consumer, readers-writers and dining philosophers problems. Can you solve
+    bounded-buffer with semaphores?
+  vetted: true
+- topic: deadlocks
+  question: Can you explain deadlocks simply?
+  answer: A deadlock is when a group of processes each wait for a resource another one in the group holds,
+    so none of them can move. Think of two cars on a one-lane bridge from both ends. What would have to
+    change for one of them to get through?
+  vetted: true
+- topic: deadlocks
+  question: What are common mistakes with deadlocks?
+  answer: 'Common slips: thinking any one of the four conditions alone causes deadlock, mixing up prevention
+    and avoidance, and getting the need matrix wrong in the banker''s algorithm. Which of the four conditions
+    are you trying to break?'
+  vetted: true
+- topic: deadlocks
+  question: What is the key idea behind deadlocks?
+  answer: 'Deadlock needs all four: mutual exclusion, hold and wait, no preemption and circular wait.
+    If you made every process request resources in the same order, which condition could no longer happen?'
+  vetted: true
+- topic: deadlocks
+  question: Give me a hint about deadlocks.
+  answer: Draw the resource allocation graph. Is there a cycle, and if every resource has only one instance,
+    what does a cycle tell you?
+  vetted: true
+- topic: deadlocks
+  question: What should I revise about deadlocks before the exam?
+  answer: Revise the four conditions, resource allocation graphs, prevention, avoidance with the banker's
+    algorithm, detection and recovery. Can you check whether a state is safe with the banker's algorithm?
+  vetted: true
+- topic: memory_management
+  question: Can you explain memory management simply?
+  answer: Memory management decides where each process lives in RAM and keeps processes out of each other's
+    memory. If processes are placed in variable-sized blocks, what happens to the gaps between them over
+    time?
+  vetted: true
+- topic: memory_management
+  question: What are common mistakes with memory management?
+  answer: 'Common slips: mixing up internal and external fragmentation, confusing logical and physical
+    addresses, and misapplying first, best and worst fit. Is wasted space inside an allocated block internal
+    or external fragmentation?'
+  vetted: true
+- topic: memory_management
+  question: What is the key idea behind memory management?
+  answer: Programs use logical addresses, and the hardware translates them to physical ones, so a process
+    can be placed anywhere. What role do the base and limit registers play in that translation?
+  vetted: true
+- topic: memory_management
+  question: Give me a hint about memory management.
+  answer: Draw memory as a strip and place the requests one by one with each fit strategy. Which strategy
+    leaves the largest usable hole at the end?
+  vetted: true
+- topic: memory_management
+  question: What should I revise about memory management before the exam?
+  answer: Revise logical vs physical addresses, contiguous allocation, fixed and variable partitions,
+    first, best and worst fit, fragmentation and compaction, and swapping. Can you allocate a list of
+    requests with each fit strategy?
+  vetted: true
+- topic: paging
+  question: Can you explain paging simply?
+  answer: Paging splits memory into fixed-size frames and each process into pages of the same size, so
+    a process does not need one continuous block. If page sizes are fixed, which kind of fragmentation
+    disappears?
+  vetted: true
+- topic: paging
+  question: What are common mistakes with paging?
+  answer: 'Common slips: splitting an address into page number and offset with the wrong number of bits,
+    forgetting the TLB in access time calculations, and mixing up pages and frames. With 4 KB pages, how
+    many bits of the address are the offset?'
+  vetted: true
+- topic: paging
+  question: What is the key idea behind paging?
+  answer: A page table maps each page number to a frame number, and the offset stays the same. Why does
+    that make translating an address simple?
+  vetted: true
+- topic: paging
+  question: Give me a hint about paging.
+  answer: Write the logical address in binary, split it into page number and offset, look up the frame,
+    and put the frame number in front of the offset. What physical address do you get?
+  vetted: true
+- topic: paging
+  question: What should I revise about paging before the exam?
+  answer: Revise page tables, address translation, the TLB and effective access time, multilevel and inverted
+    page tables, and internal fragmentation in paging. Can you compute the effective access time for a
+    given TLB hit ratio?
+  vetted: true
+- topic: virtual_memory
+  question: Can you explain virtual memory and page replacement simply?
+  answer: Virtual memory lets a process use more memory than is physically free by keeping only the pages
+    it needs in RAM and the rest on disk. What happens when the process touches a page that is not in
+    RAM?
+  vetted: true
+- topic: virtual_memory
+  question: What are common mistakes with virtual memory and page replacement?
+  answer: 'Common slips: counting page faults wrongly in FIFO, LRU and optimal, forgetting that FIFO can
+    get worse with more frames (Belady''s anomaly), and confusing thrashing with a high fault rate for
+    a moment. With more frames, should faults always go down?'
+  vetted: true
+- topic: virtual_memory
+  question: What is the key idea behind virtual memory and page replacement?
+  answer: Programs tend to reuse recent pages (locality), so keeping the right pages in RAM makes most
+    accesses fast. Which replacement policy uses recent use to guess the future?
+  vetted: true
+- topic: virtual_memory
+  question: Give me a hint about virtual memory and page replacement.
+  answer: Make a table with one column per memory reference and the frame contents underneath. When a
+    fault happens, which page does your policy remove?
+  vetted: true
+- topic: virtual_memory
+  question: What should I revise about virtual memory and page replacement before the exam?
+  answer: Revise demand paging, page faults, FIFO, LRU and optimal replacement, Belady's anomaly, the
+    working set, and thrashing. Can you count the page faults for a reference string with three frames
+    under each policy?
+  vetted: true
+- topic: file_systems
+  question: Can you explain file systems simply?
+  answer: A file system organises data on disk into files and directories and keeps track of which blocks
+    belong to which file. When you open a file by name, how does the system find its blocks?
+  vetted: true
+- topic: file_systems
+  question: What are common mistakes with file systems?
+  answer: 'Common slips: mixing up allocation methods, forgetting that contiguous allocation suffers external
+    fragmentation, and miscounting block accesses with indexed allocation. How many disk reads does it
+    take to reach the tenth block with linked allocation?'
+  vetted: true
+- topic: file_systems
+  question: What is the key idea behind file systems?
+  answer: The allocation method decides how quickly you can reach any block of a file. Why is indexed
+    allocation good for random access?
+  vetted: true
+- topic: file_systems
+  question: Give me a hint about file systems.
+  answer: Draw a file's blocks under contiguous, linked and indexed allocation. For each one, how would
+    you find the block that holds byte 50,000?
+  vetted: true
+- topic: file_systems
+  question: What should I revise about file systems before the exam?
+  answer: Revise file attributes and operations, directory structures, contiguous, linked and indexed
+    allocation, inodes, and free-space management. Can you work out the largest file size an inode with
+    direct and indirect pointers can hold?
+  vetted: true
+- topic: io_disk_scheduling
+  question: Can you explain disk scheduling simply?
+  answer: Disk scheduling decides the order in which waiting disk requests are served, to cut down how
+    far the disk head moves. If requests are at tracks 10, 90 and 15 and the head is at 12, which order
+    wastes the least movement?
+  vetted: true
+- topic: io_disk_scheduling
+  question: What are common mistakes with disk scheduling?
+  answer: 'Common slips: going the wrong direction first in SCAN or LOOK, forgetting that C-SCAN jumps
+    back to the start, and adding the head movement wrongly. Does your algorithm go all the way to the
+    end of the disk or only to the last request?'
+  vetted: true
+- topic: io_disk_scheduling
+  question: What is the key idea behind disk scheduling?
+  answer: Every algorithm trades total head movement against fairness. Why can shortest seek time first
+    starve requests at the far end?
+  vetted: true
+- topic: io_disk_scheduling
+  question: Give me a hint about disk scheduling.
+  answer: Draw the track numbers on a line and trace the head's path for each algorithm. What total distance
+    does each path cover?
+  vetted: true
+- topic: io_disk_scheduling
+  question: What should I revise about disk scheduling before the exam?
+  answer: Revise FCFS, SSTF, SCAN, C-SCAN, LOOK and C-LOOK, how to compute total head movement, and seek
+    time vs rotational latency. Can you solve the same request queue with all six algorithms?
   vetted: true
