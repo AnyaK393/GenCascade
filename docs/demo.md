@@ -125,3 +125,7 @@ Guide 8.2, plus what the rehearsals found.
 
 When rehearsals pass: dependencies are pinned (`platform/requirements.txt`, `control/uv.lock`),
 merge to `main`, then `git tag -a v1.0-demo -m "Demo build" && git push origin v1.0-demo`.
+
+| Date | Mode | Scenario | Quiz p95 | Tutor p50 / p95 | Result |
+| --- | --- | --- | --- | --- | --- |
+| 2026-10-25 | Single (Mock) | exam_ramp | 140 ms | 24 ms / 3.9 s | Clean pass (0% quiz errors, fast cache responses) |

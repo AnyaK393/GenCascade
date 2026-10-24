@@ -82,3 +82,18 @@ vetted one, which gave 22% even with the topic FAQs vetted. **11/11 checks pass.
 Run with the control room stopped: a run with a leftover control room and other apps open on the
 same Mac gave a quiz p95 of 28.7 s, from the whole Docker VM stalling, not from the quiz path.
 
+## Run 2: 2026-10-23 (Clean Hardware Baseline)
+
+Apple MacBook Air (M-series), `qwen2.5:0.5b` on native Ollama (Metal). Tested with clean background conditions (all apps closed, plugged in).
+
+| Concurrency | Requests | p50 (s) | p95 (s) | tok/s per request | tok/s total | prompt tok | output tok |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 30 | 4.92 | 6.24 | 39.7 | 38.1 | 70 | 199 |
+| 2 | 8 | 6.32 | 6.33 | 32.7 | 63.7 | 70 | 200 |
+| 4 | 16 | 12.32 | 12.80 | 32.8 | 64.5 | 70 | 200 |
+| 8 | 32 | 25.10 | 26.04 | 32.2 | 63.4 | 70 | 200 |
+
+- Unloaded p95: **6.24 s**; unloaded tokens/s per request: **39.7**
+- Knee (first concurrency with p95 > 3x unloaded p95): **8**
+- Proposed `llm_inference` SLO: Confirmed at **16 s** (aligned with trained model).
+
