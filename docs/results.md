@@ -129,12 +129,17 @@ so the onsets in leak episodes come from overload, not from the leak itself.
 <!-- fedora:limits start -->
 ## Known limitations found during evaluation
 
-- **Stale session count (platform, gateway).** `cs_sessions_active` is only recomputed when a request
-  arrives, so after load stops it keeps its last value instead of falling to 0 within 60 s as
-  `contracts/metrics.md` defines. Effect: after a rush the control room still sees "students online",
-  idle risk stays elevated and the half-open demand gate waits longer than needed. Training episodes and
-  comparison runs are barely affected (their exports end when the load ends). Fix: prune and set the
-  gauge from a periodic task in the gateway, not only in `touch_session`.
+- **Stale session count (platform, gateway). Fixed 2026-10-23** (commit `c38d994`). `cs_sessions_active`
+  was only recomputed when a request arrived, so after load stopped it kept its last value instead of
+  falling to 0 within 60 s as `contracts/metrics.md` defines. Effect: after a rush the control room still
+  saw "students online", idle risk stayed elevated and the half-open demand gate waited longer than
+  needed. Training episodes and comparison runs were barely affected (their exports end when the load
+  ends). Fix: the gateway now expires idle sessions and sets the gauge every 5 s.
+- **The exam cache hit rate (80 %) is measured with the questions the cache was written for.** 150 of the
+  300 vetted cache entries use the same five phrasings as the Locust question bank ("Can you explain
+  {topic} simply?", "Give me a hint about {topic}.", ...). Real students phrase questions more freely, so
+  their hit rate would be lower; the other 150 entries are specific course questions that load testing
+  rarely asks verbatim. A fair estimate would need questions written by people who never saw the cache.
 - **Cascade risk compounds calibrated floors.** A calibrated model never predicts exactly 0, and
   `R(v) = 1 - (1 - p_v) * prod(1 - w * R(u))` adds those small floors along the chain: at idle, own risks
   of 0.06-0.34 give the gateway a cascade risk of about 0.3-0.5. Containment acts only on the LLM's cascade
