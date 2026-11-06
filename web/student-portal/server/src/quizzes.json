@@ -1,0 +1,83 @@
+{
+  "DSA101": [
+    {
+      "question": "Average lookup cost in a hash table?",
+      "options": ["O(1)", "O(log n)", "O(n)"],
+      "answer": 0
+    },
+    {
+      "question": "Inserting sorted keys into a plain BST gives a tree of height…",
+      "options": ["log n", "n", "1"],
+      "answer": 1
+    },
+    {
+      "question": "Which structure gives FIFO order?",
+      "options": ["Stack", "Queue", "Heap"],
+      "answer": 1
+    },
+    {
+      "question": "Binary search needs the array to be…",
+      "options": ["Sorted", "Hashed", "Linked"],
+      "answer": 0
+    },
+    {
+      "question": "BFS on an unweighted graph finds…",
+      "options": ["Shortest paths", "A topological order", "A minimum-weight spanning tree"],
+      "answer": 0
+    }
+  ],
+  "DBMS201": [
+    {
+      "question": "A foreign key refers to…",
+      "options": ["A primary key of another table", "Any column", "An index"],
+      "answer": 0
+    },
+    {
+      "question": "Which normal form removes transitive dependencies?",
+      "options": ["1NF", "2NF", "3NF"],
+      "answer": 2
+    },
+    {
+      "question": "The A in ACID stands for…",
+      "options": ["Availability", "Atomicity", "Accuracy"],
+      "answer": 1
+    },
+    {
+      "question": "WHERE filters rows; HAVING filters…",
+      "options": ["Groups", "Columns", "Tables"],
+      "answer": 0
+    },
+    {
+      "question": "Most database indexes are built as…",
+      "options": ["B+ trees", "Linked lists", "Stacks"],
+      "answer": 0
+    }
+  ],
+  "OS202": [
+    {
+      "question": "Threads of one process share…",
+      "options": ["Address space", "Stack", "Registers"],
+      "answer": 0
+    },
+    {
+      "question": "Which is NOT a deadlock condition?",
+      "options": ["Mutual exclusion", "Preemption", "Circular wait"],
+      "answer": 1
+    },
+    {
+      "question": "Round robin is mainly tuned by…",
+      "options": ["Time quantum", "Page size", "Disk speed"],
+      "answer": 0
+    },
+    {
+      "question": "A TLB speeds up…",
+      "options": ["Address translation", "Disk seeks", "Context switches"],
+      "answer": 0
+    },
+    {
+      "question": "Thrashing happens when a process…",
+      "options": ["Spends more time paging than executing", "Has too many threads", "Uses SSTF"],
+      "answer": 0
+    }
+  ]
+}

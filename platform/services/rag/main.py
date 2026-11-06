@@ -1,17 +1,20 @@
 """curriculum_rag_service (port 8003): TF-IDF retrieval over data/curriculum and a semantic
 answer cache in Redis. Nothing here calls the LLM, which is what makes it a safe fallback."""
 
+import asyncio
 import hashlib
+import os
 import re
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import yaml
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from prometheus_client import Counter, Histogram
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from cs_common import chaos, create_app, settings
@@ -27,6 +30,8 @@ CACHE_TTL_S = 6 * 3600
 CACHE_MIN_SIM = 0.75
 SOLUTION_TAG = "<!-- type: solution -->"
 SEED_FILE = settings.data_dir / "cache_seed.yaml"  # written by tools/seed_cache.py, vetted by hand
+CURRICULUM_DIR = settings.data_dir / "curriculum"
+NOTES_DIR = Path(os.environ.get("NOTES_DIR", "/notes"))
 
 
 @dataclass
@@ -38,25 +43,38 @@ class Chunk:
     solution: bool
 
 
-def load_chunks() -> list[Chunk]:
-    """One chunk list from data/curriculum/<COURSE>/<topic>.md, split by `## ` section then
-    into ~400-character pieces on paragraph boundaries."""
+def split_chunks(course: str, topic: str, text: str) -> list[Chunk]:
+    """Split one markdown file by `## ` section, then into ~400-character pieces on paragraph
+    boundaries."""
     chunks = []
-    for path in sorted((settings.data_dir / "curriculum").glob("*/*.md")):
-        course, topic = path.parent.name, path.stem
-        for part in re.split(r"^## ", path.read_text(), flags=re.M)[1:]:
-            section, _, body = part.partition("\n")
-            solution = SOLUTION_TAG in body
-            body = body.replace(SOLUTION_TAG, "").strip()
-            buf = ""
-            for para in [p.strip() for p in body.split("\n\n") if p.strip()]:
-                if buf and len(buf) + len(para) > CHUNK_CHARS:
-                    chunks.append(Chunk(course, topic, section.strip(), buf, solution))
-                    buf = ""
-                buf = f"{buf}\n\n{para}".strip()
-            if buf:
+    for part in re.split(r"^## ", text, flags=re.M)[1:]:
+        section, _, body = part.partition("\n")
+        solution = SOLUTION_TAG in body
+        body = body.replace(SOLUTION_TAG, "").strip()
+        buf = ""
+        for para in [p.strip() for p in body.split("\n\n") if p.strip()]:
+            if buf and len(buf) + len(para) > CHUNK_CHARS:
                 chunks.append(Chunk(course, topic, section.strip(), buf, solution))
+                buf = ""
+            buf = f"{buf}\n\n{para}".strip()
+        if buf:
+            chunks.append(Chunk(course, topic, section.strip(), buf, solution))
     return chunks
+
+
+def load_chunks() -> list[Chunk]:
+    """One chunk list from <COURSE>/<topic>.md under data/curriculum and the uploaded notes."""
+    paths = [*sorted(CURRICULUM_DIR.glob("*/*.md")), *sorted(NOTES_DIR.glob("*/*.md"))]
+    return [c for path in paths for c in split_chunks(path.parent.name, path.stem, path.read_text())]
+
+
+def build_index() -> dict:
+    chunks = load_chunks()
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words="english", sublinear_tf=True)
+    matrix = vectorizer.fit_transform([f"{c.topic.replace('_', ' ')} {c.section} {c.text}" for c in chunks])
+    return dict(chunks=chunks, vectorizer=vectorizer, matrix=matrix,
+                courses=np.array([c.course for c in chunks]),
+                solution=np.array([c.solution for c in chunks]))
 
 
 index: dict = {}
@@ -85,12 +103,7 @@ async def reload_cache_vectors() -> None:
 
 @asynccontextmanager
 async def lifespan(_app):
-    chunks = load_chunks()
-    vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words="english", sublinear_tf=True)
-    matrix = vectorizer.fit_transform([f"{c.topic.replace('_', ' ')} {c.section} {c.text}" for c in chunks])
-    index.update(chunks=chunks, vectorizer=vectorizer, matrix=matrix,
-                 courses=np.array([c.course for c in chunks]),
-                 solution=np.array([c.solution for c in chunks]))
+    index.update(build_index())
     await reload_cache_vectors()
     await load_seed()
     yield
@@ -221,3 +234,39 @@ async def admin_reset():
     cache_vecs.clear()
     chaos.clear()
     return {"ok": True, "cleared": len(keys), "seeded": await load_seed()}
+
+
+class NoteBody(BaseModel):
+    course: str
+    topic: str = Field(pattern=r"^[a-z0-9_]{2,40}$")
+    markdown: str = Field(min_length=20, max_length=100_000)
+
+
+notes_lock = asyncio.Lock()
+
+
+@app.post("/admin/notes", dependencies=[Depends(require_token)])
+async def add_note(b: NoteBody):
+    # match the listing, not is_dir(): course is caller input and ends up in a path
+    if b.course not in {p.name for p in CURRICULUM_DIR.iterdir() if p.is_dir()}:
+        raise HTTPException(422, f"unknown course: {b.course}")
+    chunks = len(split_chunks(b.course, b.topic, b.markdown))
+    if not chunks:
+        raise HTTPException(422, "markdown needs at least one '## ' heading with text under it")
+    path = NOTES_DIR / b.course / f"{b.topic}.md"
+    async with notes_lock:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")  # a failed re-upload must not destroy the previous note
+        tmp.write_text(b.markdown)
+        tmp.replace(path)
+        new = await asyncio.to_thread(build_index)  # searches keep running during the rebuild
+        index.clear()
+        index.update(new)
+        await reload_cache_vectors()  # cached vectors belong to the old vocabulary
+    return {"ok": True, "chunks": chunks, "total_chunks": len(index["chunks"])}
+
+
+@app.get("/admin/notes", dependencies=[Depends(require_token)])
+async def list_notes():
+    return [{"course": p.parent.name, "topic": p.stem, "bytes": p.stat().st_size}
+            for p in sorted(NOTES_DIR.glob("*/*.md"))]

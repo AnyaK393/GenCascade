@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Schedule exam')}"></head>
+<body>
+<header th:replace="~{layout :: nav}"></header>
+<main class="narrow">
+  <h1>Schedule an exam</h1>
+  <form th:action="@{/exams}" th:object="${examForm}" method="post" class="stack">
+    <label>Course
+      <select th:field="*{course}">
+        <option th:each="c : ${courses}" th:value="${c.code}" th:text="${c.code + ' - ' + c.title}"></option>
+      </select>
+      <span class="error" th:errors="*{course}"></span>
+    </label>
+    <label>Start
+      <input type="datetime-local" th:field="*{startAt}">
+      <span class="error" th:errors="*{startAt}"></span>
+    </label>
+    <label>Duration (minutes)
+      <input type="number" th:field="*{durationMin}">
+      <span class="error" th:errors="*{durationMin}"></span>
+    </label>
+    <label>Expected students
+      <input type="number" th:field="*{expectedStudents}">
+      <span class="error" th:errors="*{expectedStudents}"></span>
+    </label>
+    <label>Topics (comma-separated)
+      <input type="text" th:field="*{topics}" placeholder="bst,heaps">
+      <span class="error" th:errors="*{topics}"></span>
+    </label>
+    <button>Save exam</button>
+  </form>
+</main>
+</body>
+</html>

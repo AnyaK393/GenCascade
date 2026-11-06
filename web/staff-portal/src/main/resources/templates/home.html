@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Home')}"></head>
+<body>
+<header th:replace="~{layout :: nav}"></header>
+<main>
+  <h1>Welcome</h1>
+  <div class="cards">
+    <div class="card"><b th:text="${courseCount}">0</b> courses</div>
+    <div class="card"><b th:text="${upcomingCount}">0</b> upcoming exams</div>
+  </div>
+  <ul>
+    <li><a th:href="@{/exams/new}">Schedule an exam</a></li>
+    <li><a th:href="${statusUrl}">Public status page</a></li>
+    <li><a th:href="${notesUrl}">Notes uploader</a></li>
+    <li><a th:href="${dashboardUrl}">Control room dashboard</a></li>
+  </ul>
+</main>
+</body>
+</html>

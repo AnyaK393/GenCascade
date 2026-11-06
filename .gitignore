@@ -9,3 +9,12 @@ __pycache__/
 .idea/
 .vscode/
 .demo.log
+.demo-portal.pid
+node_modules/
+dist/
+target/
+*.db
+web/notes-uploader/outbox/
+web/notes-uploader/uploads/
+web/student-portal/server/logs/
+web/student-portal/server/data/

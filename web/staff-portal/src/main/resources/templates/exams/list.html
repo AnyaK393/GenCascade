@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Exams')}"></head>
+<body>
+<header th:replace="~{layout :: nav}"></header>
+<main>
+  <h1>Upcoming exams</h1>
+  <div th:replace="~{layout :: flash}"></div>
+  <p th:if="${exams.isEmpty()}">No upcoming exams. <a th:href="@{/exams/new}">Schedule one</a>.</p>
+  <div class="scroll" th:unless="${exams.isEmpty()}">
+    <table>
+      <thead><tr><th>Course</th><th>Start</th><th>Minutes</th><th>Students</th><th>Topics</th><th>By</th><th></th></tr></thead>
+      <tbody>
+        <tr th:each="e : ${exams}">
+          <td th:text="${e.course.code}"></td>
+          <td th:text="${#temporals.format(e.localStart, 'dd MMM yyyy HH:mm')}"></td>
+          <td th:text="${e.durationMin}"></td>
+          <td th:text="${e.expectedStudents}"></td>
+          <td th:text="${e.topics}"></td>
+          <td th:text="${e.createdBy}"></td>
+          <td><form th:action="@{/exams/{id}/delete(id=${e.id})}" method="post"><button class="danger">Delete</button></form></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

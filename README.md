@@ -7,6 +7,7 @@ Predictive cascade-failure protection for a campus GenAI tutoring platform.
 | `contracts/` | both (PR approved by both) | Metric names, Redis keys, control API, features |
 | `platform/` | Mac | The GenAI platform: 5 FastAPI services, Redis, Ollama, student page |
 | `control/` | Fedora | The control room: Prometheus, Locust, resilience core, dashboard, experiments |
+| `web/` | both | Student portal (Mac), staff portal, status page and notes uploader (Fedora): see `web/README.md` |
 | `scripts/` | shared | `check_contracts.py`, `demo.sh` |
 | `docs/` | shared | calibration, results, figures |
 

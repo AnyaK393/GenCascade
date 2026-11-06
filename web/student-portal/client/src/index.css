@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.btn {
+  @apply rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-50;
+}
+.btn-secondary {
+  @apply rounded-lg border border-slate-300 bg-white px-4 py-2 font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-50;
+}
+.field {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400;
+}
+
+/* Tailwind's reset removes these, and tutor answers are markdown. */
+.markdown ul { @apply list-disc pl-5; }
+.markdown ol { @apply list-decimal pl-5; }
+.markdown p + p { @apply mt-2; }
+.markdown code { @apply rounded bg-slate-100 px-1 font-mono text-sm; }
+.markdown pre { @apply overflow-x-auto rounded bg-slate-100 p-2; }

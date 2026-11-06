@@ -63,7 +63,8 @@ services:
     <<: *svc
     mem_limit: 320m
     ports: ["8003:8003"]
-    environment: {<<: *env, SERVICE_NAME: curriculum_rag, SERVICE_MODULE: rag, PORT: "8003"}
+    volumes: ["notes-data:/notes", "${CS_PLATFORM_DIR:-.}/data:/app/data:ro"]
+    environment: {<<: *env, SERVICE_NAME: curriculum_rag, SERVICE_MODULE: rag, PORT: "8003", NOTES_DIR: /notes}
     depends_on: {redis: {condition: service_healthy}}
 
   student:
@@ -93,3 +94,4 @@ services:
 
 volumes:
   student-data:
+  notes-data:

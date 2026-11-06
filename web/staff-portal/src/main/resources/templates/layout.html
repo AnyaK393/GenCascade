@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${title} + ' · CascadeShield Staff'">Staff</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:fragment="nav">
+  <nav>
+    <strong>CascadeShield Staff</strong>
+    <a th:href="@{/}">Home</a>
+    <a th:href="@{/exams}">Exams</a>
+    <a th:href="@{/exams/new}">Schedule exam</a>
+    <form th:action="@{/logout}" method="post"><button class="link">Log out</button></form>
+  </nav>
+</header>
+<div th:fragment="flash">
+  <p class="notice ok" th:if="${message}" th:text="${message}"></p>
+  <p class="notice warn" th:if="${warning}" th:text="${warning}"></p>
+</div>
+</body>
+</html>

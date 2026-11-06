@@ -16,6 +16,7 @@ export CS_PLATFORM_DIR="$ROOT/platform" CS_CONTROL_DIR="$ROOT/control"
 # Without build attestations an unchanged image keeps its id, so a rerun does not recreate containers.
 export BUILDX_NO_DEFAULT_ATTESTATIONS=1
 LOG="$ROOT/.demo.log"; : > "$LOG"
+PORTAL_PID="$ROOT/.demo-portal.pid"
 
 MOCK=0 SINGLE=0 STOP=0 PREPARE=0
 for arg in "$@"; do
@@ -50,6 +51,7 @@ step() { echo; echo "${B}$1${N}"; }
 if [ "$STOP" = 1 ]; then
   # Both profiles share one compose project and network: take the control containers down with it,
   # or a later --single finds them attached to a network that no longer exists.
+  if [ -f "$PORTAL_PID" ]; then kill "$(cat "$PORTAL_PID")" 2>/dev/null; rm -f "$PORTAL_PID"; fi
   docker compose --profile platform --profile control down >>"$LOG" 2>&1 && echo "stopped (submissions volume kept)"
   exit 0
 fi
@@ -157,9 +159,28 @@ if curl -sf -m 10 -X POST localhost:8002/admin/reset -H "X-CS-Token: $TOKEN" >/d
   pass "POST /admin/reset (level 0, breaker closed, queues and chaos cleared)"
 else fail "POST /admin/reset failed"; fi
 
+# --- 5. student portal ------------------------------------------------------------------------
+step "5. Student portal"
+PORTAL_DIR="$ROOT/web/student-portal/server"
+if curl -sf -m 2 localhost:3000/health >/dev/null; then
+  pass "student portal :3000 responds (already running)"
+elif [ ! -d "$PORTAL_DIR/node_modules" ] || [ ! -f "$ROOT/web/student-portal/client/dist/index.html" ]; then
+  warn "student portal not built, skipped: see web/README.md"
+else
+  # cd on its own line: with "cd && node &" a wrapper shell would hold this script's stdout open and own $!
+  cd "$PORTAL_DIR"
+  NODE_ENV=production nohup node src/index.js >>"$LOG" 2>&1 </dev/null &
+  echo $! >"$PORTAL_PID"
+  cd "$ROOT"
+  for _ in $(seq 1 10); do curl -sf -m 2 localhost:3000/health >/dev/null && break; sleep 1; done
+  if curl -sf -m 2 localhost:3000/health >/dev/null; then pass "student portal :3000 responds"
+  else fail "student portal not responding: see .demo.log"; fi
+fi
+
 host="${lan:-localhost}"
 echo
 echo "${B}Ready.${N}  $FAILS preflight/start problem(s)."
+echo "  Student portal    http://$host:3000/"
 echo "  Student page      http://$host:8000/   (this Mac: http://localhost:8000/)"
 echo "  Control state     curl -s -H 'X-CS-Token: \$CS_TOKEN' localhost:8002/control/state | python3 -m json.tool"
 if [ "$SINGLE" = 1 ]; then
