@@ -9,6 +9,7 @@ const UNREACHABLE = {
 };
 
 let latest = null;
+let misses = 0;
 export const getStatus = () => latest ?? UNREACHABLE;
 
 const changed = (a, b) => !a || a.level !== b.level || a.banner !== b.banner || a.exam?.active !== b.exam?.active;
@@ -21,6 +22,9 @@ async function poll(io) {
   } catch {
     next = UNREACHABLE;
   }
+  // One slow poll under load is not an outage: only a second miss in a row turns the banner red.
+  misses = next === UNREACHABLE ? misses + 1 : 0;
+  if (misses === 1 && latest) return;
   const emit = changed(latest, next);
   latest = next;
   if (emit) io.emit('status', next);

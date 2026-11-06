@@ -10,7 +10,8 @@ can log in, ask questions and submit quizzes with Fedora switched off.
 | Status page | Fedora | `http://<fedora-ip>:8080/status/` | Servlet, JSP, JSTL, JDBC, Tomcat 10.1 |
 | Notes uploader | Fedora | `http://<fedora-ip>:8070/` | PHP 8, PDO, MySQL |
 
-See `SYLLABUS_MAP.md` for the unit-by-unit map and `NOTES.md` for decisions and known limits.
+See `DEMO_RUNBOOK.md` to run the demo, `SYLLABUS_MAP.md` for the unit-by-unit map and `NOTES.md` for
+decisions and known limits.
 
 ## Demo accounts
 
@@ -57,8 +58,13 @@ Add `?debug=1` to any URL or press Ctrl+Shift+D for the network inspector.
 
 ## Fedora setup (once)
 
+Use `scripts/fedora-web.sh setup`, then `start`, `check` and `stop`. It does everything in this section
+and the Fedora parts below, and picks the right packages for the Fedora release. `DEMO_RUNBOOK.md` has
+the full two-machine steps. By hand, the steps are:
+
 ```bash
-sudo dnf install java-21-openjdk-devel community-mysql-server php-cli php-mysqlnd
+# Fedora 45 has no Java 21: install java-25-openjdk-devel there. Any JDK from 21 up works.
+sudo dnf install java-21-openjdk-devel mysql-server php-cli php-mysqlnd
 sudo systemctl enable --now mysqld
 # Edit the password in web/sql/schema.sql to match MYSQL_PASSWORD, then:
 sudo mysql < web/sql/schema.sql
@@ -135,6 +141,7 @@ Uploaded files stay in `uploads/`, outside the web root. "Sent" notifications ar
 | "Saved, but CascadeShield was not notified" | Resilience core down, or `CS_TOKEN` differs between machines. The exam is saved but must be created again to reach the core. |
 | Uploads stay `Pending` | The RAG service was unreachable. Check `RAG_URL` and upload again. |
 | Exam starts at the wrong time | Fedora's time zone is wrong; check `timedatectl` |
+| Exam ends early | An earlier overlapping exam ended. Restart the core between rehearsals (`DEMO_RUNBOOK.md`) |
 
 ## Demo script (about 8 minutes, two people)
 

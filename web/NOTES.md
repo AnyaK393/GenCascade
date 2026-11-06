@@ -59,6 +59,16 @@ Newer than, or not named in, the plan: Express 5, React Router 7, Vite 8, TypeSc
 - Status JSON is read with regular expressions, because the plan names no JSON library. The comment in
   `StatusPoller.java` says when to replace them.
 
+- Overlapping exams: when any exam ends, the core sends "exam off", even if another is still running. The
+  staff form does not stop overlaps. `/admin/reset` does not clear the core's calendar; restarting the core
+  clears exams added at runtime. Avoid overlaps and restart the core between rehearsals.
+- `data/exam_calendar.yaml` holds real exams (DSA101 on 2026-11-20 at 09:00, OS202 on 2026-11-24 at 14:00).
+  A demo running at those times enters exam mode by itself.
+- Locust's seeded scenarios reuse their idempotency keys, so repeat runs add no rows to `submissions`.
+  `committed` does not grow by the request count, and that is correct.
+- `exam_ramp` calls the gateway directly, so it does not load the Express portal. Portal memory below was
+  measured during the ramp but with a single browser session on it.
+
 ## Verified, and how
 
 Tested on the Mac with real services. Fedora's parts ran in Docker on the versions the plan names:
@@ -73,6 +83,8 @@ MySQL 8, Tomcat 10.1, Java 21, PHP 8.3.
 | E | Tomcat with MySQL: history rows, core offline, gateway offline, MySQL offline, theme cookie. |
 | F | Browser flow, shared BCrypt login, pending and failed states, tutor answering from an upload at level 2. |
 | G | `demo.sh --mock` starts the portal and `--stop` stops it. |
+| Exam rehearsal (Mac, 2026-11-06) | `demo.sh --single` on real Ollama, exam created in the staff portal, full `exam_ramp`: 915 requests, 0 failed, quiz p95 48 ms, tutor p95 2 s; level 1 then 2 and breaker open at 0.97 risk; portal max 41 MB; 0 page errors. |
+| `fedora-web.sh` (2026-11-06) | `setup`, `start`, `check`, `stop` in a Fedora 45 container with systemd, against the Mac's live stack: Java 25, MySQL 9.7, PHP 8.5, Tomcat 10.1.61. Exam reached the core, status history in MySQL, upload indexed and the tutor answered from it. Package choice also checked on Fedora 41 and 43. |
 
 ## Not verified here
 
@@ -81,12 +93,12 @@ Run these on demo hardware before the demo.
 1. **Real phones:** open `http://<mac-ip>:3000` on an iPhone and an Android phone. Chrome's phone
    emulation is not Safari.
 2. **Real Ollama:** `scripts/demo.sh`, then ask a question. Testing used the mock LLM.
-3. **Fedora natively:** run the setup in `web/README.md`. `schema.sql` was tested with the user at `'%'`
-   instead of `'localhost'` because MySQL was in a container.
-4. **Two machines:** create an exam on Fedora, then confirm that the student banner shows exam mode on
+3. **Fedora natively:** `scripts/fedora-web.sh` ran in a container, so firewalld, SELinux, x86_64 and a
+   real network between the machines are untested.
+4. **Two machines:** the core ran on the Mac for every test. Create an exam on Fedora, then confirm that the student banner shows exam mode on
    the Mac:
    `curl -s -H "X-CS-Token: $CS_TOKEN" http://<fedora-ip>:8600/state`
-5. **Live exam ramp:** the Locust `exam_ramp` with the portal running, watching memory:
+5. **Portal under many real users:** watch memory while everyone is logged in:
    `ps -o rss= -p $(lsof -tiTCP:3000 -sTCP:LISTEN)` (under 120000 KB).
 6. **Postman app:** Collection Runner, as tested through Newman only.
 7. **Control tests:** `pytest` in `control/` (needs a working `control/.venv`). They could not run here: that
