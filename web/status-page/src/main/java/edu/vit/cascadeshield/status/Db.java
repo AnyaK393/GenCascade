@@ -12,7 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class Db {
-    private static final String URL = env("STATUS_DB_URL", "jdbc:mysql://localhost:3306/cascadeshield_web");
+    private static final String URL = env("STATUS_DB_URL",
+            "jdbc:mysql://" + env("MYSQL_HOST", "localhost") + ":3306/" + env("MYSQL_DB", "cascadeshield_web"));
     private static final String USER = env("MYSQL_USER", "csweb");
     private static final String PASSWORD = env("MYSQL_PASSWORD", "");
 

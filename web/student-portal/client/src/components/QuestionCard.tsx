@@ -9,13 +9,13 @@ interface Props {
 
 export default function QuestionCard({ index, question, selected, onChange }: Props) {
   return (
-    <fieldset className="rounded-xl bg-white p-4 shadow-sm">
+    <fieldset key={index} className="card animate-fade-up">
       <legend className="sr-only">Question {index + 1}</legend>
-      <p className="mb-3 font-medium">{index + 1}. {question.question}</p>
-      <div className="space-y-2">
+      <p className="mb-5 text-lg font-bold leading-snug">{index + 1}. {question.question}</p>
+      <div className="space-y-3">
         {question.options.map((option, i) => (
-          <label key={option} className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 ${selected === i ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200'}`}>
-            <input type="radio" name={`question-${index}`} checked={selected === i} onChange={() => onChange(i)} />
+          <label key={option} className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-3 transition duration-200 ${selected === i ? 'border-brand-500 bg-brand-50 font-semibold text-brand-800' : 'border-ink-100 hover:border-brand-200 hover:bg-canvas'}`}>
+            <input type="radio" className="h-4 w-4 accent-brand-600" name={`question-${index}`} checked={selected === i} onChange={() => onChange(i)} />
             {option}
           </label>
         ))}

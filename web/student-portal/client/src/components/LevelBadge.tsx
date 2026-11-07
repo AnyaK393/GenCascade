@@ -1,13 +1,13 @@
 const LEVELS = [
-  { label: 'AI Tutor', className: 'bg-purple-100 text-purple-800' },
-  { label: 'Light mode', className: 'bg-amber-100 text-amber-800' },
-  { label: 'Course notes', className: 'bg-blue-100 text-blue-800' },
-  { label: 'Hint', className: 'bg-gray-200 text-gray-800' },
-  { label: 'Queued', className: 'bg-slate-200 text-slate-800' },
+  { label: 'AI Tutor', className: 'bg-brand-100 text-brand-800' },
+  { label: 'Light mode', className: 'bg-sun-100 text-sun-800' },
+  { label: 'Course notes', className: 'bg-sky-100 text-sky-900' },
+  { label: 'Hint', className: 'bg-ink-100 text-ink-700' },
+  { label: 'Queued', className: 'bg-coral-100 text-coral-700' },
 ];
 
 export default function LevelBadge({ level }: { level: number }) {
   const badge = LEVELS[level];
   if (!badge) return null;
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${badge.className}`}>{badge.label}</span>;
+  return <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${badge.className}`}>{badge.label}</span>;
 }

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import AuthShell from '../components/AuthShell';
 import { useAppDispatch } from '../store';
 import { api, useRegisterMutation } from '../store/api';
 import { COURSES, errorDetail, type Course } from '../types/api';
@@ -30,37 +31,36 @@ export default function RegisterPage() {
     navigate('/', { replace: true });
   };
 
-  const fieldError = (text: string) => touched && text && <p className="mt-1 text-sm text-red-700">{text}</p>;
+  const fieldError = (text: string) => touched && text && <p className="mt-1.5 text-sm text-coral-700">{text}</p>;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 text-slate-900">
-      <form onSubmit={onSubmit} noValidate className="w-full max-w-sm space-y-4 rounded-2xl bg-white p-6 shadow">
-        <h1 className="text-2xl font-bold">Create an account</h1>
+    <AuthShell title="Create an account" subtitle="Join your course in under a minute.">
+      <form onSubmit={onSubmit} noValidate className="space-y-5">
         <div>
-          <label htmlFor="name" className="mb-1 block text-sm font-medium">Name</label>
+          <label htmlFor="name" className="mb-1.5 block text-sm font-semibold">Name</label>
           <input id="name" className="field" autoComplete="name" value={form.name} onChange={set('name')} />
           {fieldError(errors.name)}
         </div>
         <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium">E-mail</label>
+          <label htmlFor="email" className="mb-1.5 block text-sm font-semibold">E-mail</label>
           <input id="email" className="field" type="email" autoComplete="username" value={form.email} onChange={set('email')} />
           {fieldError(errors.email)}
         </div>
         <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium">Password</label>
+          <label htmlFor="password" className="mb-1.5 block text-sm font-semibold">Password</label>
           <input id="password" className="field" type="password" autoComplete="new-password" value={form.password} onChange={set('password')} />
           {fieldError(errors.password)}
         </div>
         <div>
-          <label htmlFor="course" className="mb-1 block text-sm font-medium">Course</label>
+          <label htmlFor="course" className="mb-1.5 block text-sm font-semibold">Course</label>
           <select id="course" className="field" value={form.course} onChange={set('course')}>
             {COURSES.map((c) => <option key={c}>{c}</option>)}
           </select>
         </div>
-        {error && <p role="alert" className="text-sm text-red-700">{errorDetail(error, 'Cannot reach the server. Try again.')}</p>}
+        {error && <p role="alert" className="rounded-xl bg-coral-50 px-4 py-2.5 text-sm text-coral-700">{errorDetail(error, 'Cannot reach the server. Try again.')}</p>}
         <button className="btn w-full" disabled={isLoading}>{isLoading ? 'Creating account…' : 'Register'}</button>
-        <p className="text-center text-sm">Already registered? <Link className="text-indigo-700 underline" to="/login">Log in</Link></p>
+        <p className="text-center text-sm text-ink-500">Already registered? <Link className="link" to="/login">Log in</Link></p>
       </form>
-    </div>
+    </AuthShell>
   );
 }

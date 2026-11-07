@@ -25,6 +25,9 @@ timedatectl                     # must show Asia/Kolkata: the exam form uses thi
 
 Ends with `Done. Next: scripts/fedora-web.sh start`. It asks for the sudo password.
 
+After any `git pull` that changes `web/`, rebuild with `scripts/fedora-web.sh stop`, `setup`, then `start`. Running
+`setup` again is safe, and a Fedora that is still running the old build keeps showing the old pages.
+
 ## 2. Every session: find the addresses
 
 Both laptops on the same phone hotspot (not college Wi-Fi).
@@ -70,7 +73,7 @@ Expect `ALL PASS`. This is the integration check: it tests all parts and every l
 | 5 | Wait for the exam start | Student portal, no reload | Amber "Tutor in light mode" and a red pill "Exam in progress: DSA101 until..." |
 | 6 | Open the quiz for DSA101 | Student portal | Practice is greyed out: "Practice is closed during the exam" |
 | 7 | Start load: `make load SCENARIO=exam_ramp` (11 minutes) | Fedora terminal | |
-| 8 | Watch risk | `http://<fedora-ip>:8501/` | Exam listed, pre-warm done, risk climbs and crosses the threshold, SHAP reasons, level rises |
+| 8 | Watch risk and the Topology graph | `http://<fedora-ip>:8501/` | Exam listed, pre-warm done. Topology: gateway, orchestrator, student, RAG and LLM each show a live risk score and turn green, amber, red as load spreads. Red outline = blast radius, dashed "open" link = breaker. SHAP reasons, level rises |
 | 9 | About 3 minutes in, watch the banner, then ask a question | Student portal | Blue "High demand: showing course notes and hints", "Course notes" badge, answer in about a second |
 | 10 | Submit the graded quiz | Student portal | "Submitted ✓" within a second, no score shown |
 | 11 | Press Ctrl+Shift+D | Student portal | Inspector: requests, live events, no secrets |

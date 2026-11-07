@@ -21,7 +21,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div aria-live="polite" className="fixed bottom-4 right-4 z-50 flex max-w-xs flex-col gap-2">
         {toasts.map((t) => (
-          <div key={t.id} className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">{t.text}</div>
+          <div key={t.id} className="animate-pop rounded-xl bg-ink-900 px-4 py-3 text-sm font-medium text-white shadow-lift">{t.text}</div>
         ))}
       </div>
     </ToastContext.Provider>

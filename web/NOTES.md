@@ -69,6 +69,9 @@ Newer than, or not named in, the plan: Express 5, React Router 7, Vite 8, TypeSc
 - `exam_ramp` calls the gateway directly, so it does not load the Express portal. Portal memory below was
   measured during the ramp but with a single browser session on it.
 
+- The artwork is original inline SVG, not photographs. Manrope (SIL Open Font License) is self-hosted, so all
+  four sites look the same with no internet.
+
 ## Verified, and how
 
 Tested on the Mac with real services. Fedora's parts ran in Docker on the versions the plan names:
@@ -84,6 +87,7 @@ MySQL 8, Tomcat 10.1, Java 21, PHP 8.3.
 | F | Browser flow, shared BCrypt login, pending and failed states, tutor answering from an upload at level 2. |
 | G | `demo.sh --mock` starts the portal and `--stop` stops it. |
 | Exam rehearsal (Mac, 2026-11-06) | `demo.sh --single` on real Ollama, exam created in the staff portal, full `exam_ramp`: 915 requests, 0 failed, quiz p95 48 ms, tutor p95 2 s; level 1 then 2 and breaker open at 0.97 risk; portal max 41 MB; 0 page errors. |
+| Redesign (2026-11-07) | Student flow 29/29 in Chrome over the LAN IP. All pages on all four sites at 1320 px and 375 px: no sideways scroll, no console errors, reduced-motion stops looping animations. Java unit tests pass. |
 | `fedora-web.sh` (2026-11-06) | `setup`, `start`, `check`, `stop` in a Fedora 45 container with systemd, against the Mac's live stack: Java 25, MySQL 9.7, PHP 8.5, Tomcat 10.1.61. Exam reached the core, status history in MySQL, upload indexed and the tutor answered from it. Package choice also checked on Fedora 41 and 43. |
 
 ## Not verified here

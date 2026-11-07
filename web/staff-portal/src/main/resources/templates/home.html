@@ -9,12 +9,13 @@
     <div class="card"><b th:text="${courseCount}">0</b> courses</div>
     <div class="card"><b th:text="${upcomingCount}">0</b> upcoming exams</div>
   </div>
-  <ul>
-    <li><a th:href="@{/exams/new}">Schedule an exam</a></li>
-    <li><a th:href="${statusUrl}">Public status page</a></li>
-    <li><a th:href="${notesUrl}">Notes uploader</a></li>
-    <li><a th:href="${dashboardUrl}">Control room dashboard</a></li>
-  </ul>
+  <h2>Quick links</h2>
+  <div class="cards">
+    <a class="card" th:href="@{/exams/new}">Schedule an exam<small>Add it to the calendar and warn the system</small></a>
+    <a class="card" th:href="${statusUrl}">Public status page<small>What students see right now</small></a>
+    <a class="card" th:href="${notesUrl}">Notes uploader<small>Give the tutor new course notes</small></a>
+    <a class="card" th:href="${dashboardUrl}">Control room dashboard<small>Live risk across every service</small></a>
+  </div>
 </main>
 </body>
 </html>

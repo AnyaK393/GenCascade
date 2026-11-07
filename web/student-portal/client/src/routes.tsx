@@ -11,7 +11,7 @@ const TutorPage = lazy(() => import('./pages/TutorPage'));
 const QuizPage = lazy(() => import('./pages/QuizPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
-const loading = <p className="p-8 text-center text-slate-500">Loading…</p>;
+const loading = <p className="p-8 text-center text-ink-500">Loading…</p>;
 
 function RequireAuth() {
   const location = useLocation();

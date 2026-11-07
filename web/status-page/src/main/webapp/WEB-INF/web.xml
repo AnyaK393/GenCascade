@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee" version="6.0">
+  <!-- StatusServlet takes "/", so static files need their own route to Tomcat's file servlet. -->
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>*.woff2</url-pattern>
+  </servlet-mapping>
+</web-app>
